@@ -215,6 +215,7 @@ def run_tv_ingestion():
     # so we set the limit as 10 minutes in seconds
     start_time = time.time()
     time_limit = 600  # 10 minutes × 60 seconds
+    total_games_count = 0
 
     # loop until time runs out or the script is stopped
     while time.time() - start_time < time_limit:
@@ -234,6 +235,14 @@ def run_tv_ingestion():
         print(f"Batch complete. {len(updated_games)} games updated, "
               f"{len(added_games)} games added.")
         print("Still connected and fetching games...")
+
+        # Update counter with the number of games processed in this batch
+        total_games_count += len(updated_games) + len(added_games)
+        
+        if total_games_count >= 5000:
+            print("Fetched 5000 games. Pausing for 15 minutes...")
+            time.sleep(900)  # Pause for 15 minutes (900 seconds)
+            total_games_count = 0  # Reset the counter after the pause
 
         # sleep for 40s before we do another round
         # this avoids spamming Lichess too much

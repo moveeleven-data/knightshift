@@ -245,6 +245,11 @@ def main():
 
         # Sleep for rate limiting
         time.sleep(0.5)
+        
+        if processed_count % 3000 == 0 and processed_count > 0:
+            print(f"Processed {processed_count} users. Pausing for 15 minutes...")
+            time.sleep(15 * 60)
+
 
     # -------------- Completion --------------
     print(

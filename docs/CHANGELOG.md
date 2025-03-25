@@ -4,6 +4,34 @@ A running log of major development milestones, current state, and future plans f
 
 ---------------------------------
 
+🗓 March 25, 2025
+
+User Profile Enrichment + Smart Update Tracking
+
+User Metadata Table Creation:
+
+Designed and created the lichess_users table to store enriched user-level profile data (e.g., ratings, location, real name, titles, time played, etc.).
+
+Selected the most meaningful subset of attributes from the Lichess user API and mapped them to appropriate Postgres column types.
+
+Profile Ingestion Script:
+
+Built a new standalone ingestion script that fetches public user profile data from the Lichess API.
+
+Extracted unique usernames from the white and black columns of the tv_channel_games table where profile_updated is false.
+
+Handled edge cases (e.g., already-ingested users, duplicate usernames across games).
+
+Converted and inserted cleaned user data into lichess_users.
+
+Tracking State with profile_updated:
+
+After each user is successfully inserted, all matching tv_channel_games rows (where the user appears as white or black) are updated with profile_updated = true.
+
+Skips processing for users who are already present in the lichess_users table.
+
+---------------------------------
+
 🗓 March 24, 2025 (Evening Update)
 
 PostgreSQL Connection Fix: Updated the .env.docker configuration to connect the Docker container to the local Postgres instance using host.docker.internal as the host.

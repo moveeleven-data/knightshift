@@ -61,6 +61,15 @@ def run_cleaning_pass():
         )
     ).fetchall()
     total_unchecked = len(games)
+
+    # Calculate an estimated processing time:
+    # - Each URL check takes about 1 second.
+    # - Every 2500 checks will incur an extra 900 seconds (15 minutes) pause.
+    estimated_time_seconds = total_unchecked + ((total_unchecked // 2500) * 900)
+    estimated_time_minutes = estimated_time_seconds / 60
+    print(f"Found {total_unchecked} games to check. "
+          f"Estimated time to complete: ~{estimated_time_minutes:.2f} minutes.")
+
     total_checked = 0
     total_deleted = 0
     start_time = time.time()
@@ -86,6 +95,10 @@ def run_cleaning_pass():
                 .values(url_valid=True)
             )
             session.commit()
+
+        if total_checked != 0 and total_checked % 2500 == 0:
+            print(f"Checked {total_checked} URLs so far. Pausing for 15 minutes...")
+            time.sleep(900)  # 900 seconds = 15 minutes
 
         # Print a summary every 30 seconds
         if time.time() - last_summary_time >= 30:
