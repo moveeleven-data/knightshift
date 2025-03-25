@@ -30,7 +30,6 @@ from db_utils import load_db_credentials, get_database_url, get_lichess_token
 load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env.local")
 
 creds = load_db_credentials()
-print("LOADED DB CREDS:", creds)
 DATABASE_URL = get_database_url(creds)
 
 engine = create_engine(DATABASE_URL, poolclass=QueuePool, pool_size=10, max_overflow=20)
@@ -68,11 +67,6 @@ def fetch_game_moves(game_id):
 
     # Check if response is OK
     if response.status_code == 200:
-        # Print the response for debugging
-        print(
-            f"Raw response for game {game_id}: {response.text}"
-        )  # Debugging the raw response
-
         pgn_text = response.text
 
         # Parse the PGN headers to get game data
@@ -131,11 +125,6 @@ def update_game_record(game_id, moves, game_data):
     white_elo = None if game_data["white_elo"] == "?" else int(game_data["white_elo"])
     black_elo = None if game_data["black_elo"] == "?" else int(game_data["black_elo"])
 
-    # Always update the game fields if there's new information
-    print(f"Updating game: {game_id}")  # Debug log
-    print(f"Game data: {game_data}")  # Debug log
-    print(f"Moves: {moves}")  # Debug log
-
     session.execute(
         update(tv_channel_games_table)
         .where(tv_channel_games_table.c.id == game_id)
@@ -156,7 +145,6 @@ def update_game_record(game_id, moves, game_data):
 
     # Set 'updated=True' if the game is finished (i.e., result is not '*' and termination is not 'Unterminated')
     if game_data["result"] != "*" and game_data["termination"] != "Unterminated":
-        print("Setting updated=True")  # Debug log
         session.execute(
             update(tv_channel_games_table)
             .where(tv_channel_games_table.c.id == game_id)
@@ -165,7 +153,6 @@ def update_game_record(game_id, moves, game_data):
 
     try:
         session.commit()
-        print("Commit successful.")  # Debug log
     except Exception as e:
         print(f"Error during commit: {e}")
         session.rollback()  # Rollback in case of error
@@ -176,8 +163,6 @@ def run_update_pass():
     total_updated = 0
     total_failed = 0
     start_time = time.time()
-
-    print("Starting the update operation...")
 
     # Fetch all games where termination is 'Unterminated' or result is '*', and updated is False
     games = session.execute(
@@ -192,20 +177,35 @@ def run_update_pass():
         )
     ).fetchall()
 
-    print(f"Fetched {len(games)} games to update.")  # Debug log
+    num_games = len(games)
+    print(f"Fetched {num_games} games to update.")  # Debug log
 
-    if not games:
+    if num_games == 0:
         print("No games found to update.")
         return
 
-    for game in games:
+    # Estimate time for completion
+    estimated_time_sec = num_games * 0.5  # assuming each game takes ~0.5 seconds
+    estimated_time_min = estimated_time_sec // 60  # Whole minutes
+    estimated_time_rem_sec = estimated_time_sec % 60  # Remaining seconds
+
+    # Print human-readable estimated time
+    if estimated_time_min == 0:
+        print(f"Estimated time to process: {int(estimated_time_rem_sec)} seconds.")
+    else:
+        print(
+            f"Estimated time to process: {int(estimated_time_min)} minutes {int(estimated_time_rem_sec)} seconds."
+        )
+
+    last_report_time = time.time()
+
+    for idx, game in enumerate(games):
         game_id = game.id
 
         # Fetch both moves and game data
         moves, game_data = fetch_game_moves(game_id)
 
         if game_data:  # If game data is found, update the record
-            print(f"Game data: {game_data}")  # Debug log
             try:
                 if moves:
                     update_game_record(game_id, moves, game_data)
@@ -219,9 +219,24 @@ def run_update_pass():
                 else:
                     raise
 
+        # Periodic update every 30 seconds
+        if time.time() - last_report_time >= 30:
+            elapsed_time = time.time() - start_time
+            processed = total_updated + total_failed
+            remaining = num_games - processed
+            estimated_remaining_sec = remaining * 0.65
+            estimated_remaining_min = estimated_remaining_sec // 60  # Whole minutes
+            estimated_remaining_rem_sec = estimated_remaining_sec % 60  # Remaining seconds
+
+            print(f"Processed {processed}/{num_games} games. "
+                f"Remaining: {remaining}. Estimated time remaining: {int(estimated_remaining_min)} minutes {int(estimated_remaining_rem_sec)} seconds.")
+            last_report_time = time.time()
+
         # Minimal pause to avoid hitting rate limits
         time.sleep(0.5)
 
+    # Final completion message
+    print("Update process completed successfully.")
 
 if __name__ == "__main__":
     run_update_pass()
