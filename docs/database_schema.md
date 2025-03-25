@@ -36,6 +36,8 @@ primary keys, and indexes.
 | moves         | text                      | YES      | NULL    | PGN move sequence            |
 | updated       | boolean                   | YES      | false   | Row enrichment status        |
 | url_valid     | boolean                   | YES      | NULL    | Whether URL is valid         |
+| opening       | text                      | YES      | NULL    | Opening name                 |
+|profile_updated| boolean                   | YES      | false   | Whether we got info on player|
 
 ---
 
