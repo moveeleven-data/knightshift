@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 import os
-import sys
 import time
-import json
 import requests
-import re
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -28,26 +25,32 @@ from sqlalchemy.pool import QueuePool
 
 from db_utils import load_db_credentials, get_database_url, get_lichess_token
 
-# Load environment variables
+# -------------------------------------------------------------------
+# Environment and Database Setup
+# -------------------------------------------------------------------
+
 load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env.local")
 creds = load_db_credentials()
 DATABASE_URL = get_database_url(creds)
 
-# Create engine and session
 engine = create_engine(DATABASE_URL, poolclass=QueuePool, pool_size=10, max_overflow=20)
 metadata = MetaData()
+Session = sessionmaker(bind=engine)
+session = Session()
 
-# Define the tv_channel_games table
+# -------------------------------------------------------------------
+# Table Definitions
+# -------------------------------------------------------------------
+
 tv_channel_games_table = Table(
     "tv_channel_games",
     metadata,
     Column("id", String, primary_key=True),
-    Column("white", String),  # The white player's username (text)
-    Column("black", String),  # The black player's username (text)
+    Column("white", String),
+    Column("black", String),
     Column("profile_updated", Boolean, default=False),
 )
 
-# Define the lichess_users table
 lichess_users_table = Table(
     "lichess_users",
     metadata,
@@ -80,8 +83,9 @@ lichess_users_table = Table(
     Column("streaming", Boolean),
 )
 
-Session = sessionmaker(bind=engine)
-session = Session()
+# -------------------------------------------------------------------
+# API & Database Helper Methods
+# -------------------------------------------------------------------
 
 
 def get_user_data_from_api(username: str):
@@ -93,13 +97,14 @@ def get_user_data_from_api(username: str):
         "Content-Type": "application/x-www-form-urlencoded",
     }
     response = requests.get(url, headers=headers, params=params)
+
     if response.status_code == 200:
         return response.json()
-    else:
-        print(
-            f"Failed to fetch user data for {username}: {response.status_code} - {response.text}"
-        )
-        return None
+
+    print(
+        f"Failed to fetch user data for {username}: {response.status_code} - {response.text}"
+    )
+    return None
 
 
 def insert_user_data(user_json):
@@ -125,7 +130,6 @@ def insert_user_data(user_json):
         "rapid_rating": perfs.get("rapid", {}).get("rating"),
         "chess960_rating": perfs.get("chess960", {}).get("rating"),
         "ultra_bullet_rating": perfs.get("ultraBullet", {}).get("rating"),
-        # Convert flag to country_code:
         "country_code": profile.get("flag"),
         "created_at": user_json.get("createdAt"),
         "seen_at": user_json.get("seenAt"),
@@ -139,6 +143,7 @@ def insert_user_data(user_json):
         "patron": user_json.get("patron"),
         "streaming": user_json.get("streaming"),
     }
+
     session.execute(lichess_users_table.insert().values(**data))
     session.commit()
 
@@ -153,8 +158,7 @@ def user_exists_in_lichess_users(user_id: str) -> bool:
 
 def mark_profile_updated_for_username(username: str):
     """
-    Once we've confirmed this username is inserted/exists,
-    update the tv_channel_games table to set profile_updated = true
+    Update tv_channel_games.profile_updated = true
     for every row that has this user as white or black.
     """
     session.execute(
@@ -168,14 +172,20 @@ def mark_profile_updated_for_username(username: str):
     session.commit()
 
 
+# -------------------------------------------------------------------
+# Main Process with Progress Reporting
+# -------------------------------------------------------------------
+
+
 def main():
+    # Gather all rows where profile_updated is false.
     rows = session.execute(
         select(tv_channel_games_table.c.white, tv_channel_games_table.c.black).where(
             tv_channel_games_table.c.profile_updated == False
         )
     ).fetchall()
 
-    # Collect all unique usernames
+    # Collect unique usernames
     users_to_process = set()
     for row in rows:
         if row.white:
@@ -183,39 +193,60 @@ def main():
         if row.black:
             users_to_process.add(row.black)
 
-    print(f"Found {len(users_to_process)} unique usernames to process.")
+    total_users = len(users_to_process)
+    print(f"Found {total_users} unique usernames to process.")
 
+    # -------------- Estimated Time & Print --------------
+    estimated_time_sec = total_users * 0.5  # 0.5 seconds per user
+    estimated_minutes = int(estimated_time_sec // 60)
+    estimated_seconds = int(estimated_time_sec % 60)
+
+    if estimated_minutes == 0:
+        print(f"Estimated time to process: ~{estimated_seconds} seconds.")
+    else:
+        print(
+            f"Estimated time to process: ~{estimated_minutes} min {estimated_seconds} sec."
+        )
+
+    last_report_time = time.time()
+    processed_count = 0
+
+    # -------------- Process Each User --------------
     for username in users_to_process:
-        # 1) Fetch user data
         user_json = get_user_data_from_api(username)
         if not user_json:
-            # Not found or error -> skip, no update to tv_channel_games
+            # no data, skip
+            processed_count += 1
             continue
 
-        # 2) Check if user exists in lichess_users
+        # user_json["id"] is the unique lichess ID
         if user_exists_in_lichess_users(user_json["id"]):
             print(
                 f"User {username} (lichess ID: {user_json['id']}) already in DB. Skipping."
             )
-            # Even if they are already in DB, mark them as updated in tv_channel_games
             mark_profile_updated_for_username(username)
-            continue
+            processed_count += 1
+        else:
+            try:
+                insert_user_data(user_json)
+                mark_profile_updated_for_username(username)
+                processed_count += 1
+            except Exception as e:
+                print(
+                    f"Error inserting user {username} (lichess ID: {user_json['id']}): {e}"
+                )
+                session.rollback()  # rollback so future inserts won't fail
 
-        # 3) Try to insert a new user
-        try:
-            insert_user_data(user_json)
-            print(f"Inserted user {username} (lichess ID: {user_json['id']}).")
-            # Now that it's inserted, mark tv_channel_games
-            mark_profile_updated_for_username(username)
-        except Exception as e:
-            print(
-                f"Error inserting user {username} (lichess ID: {user_json['id']}): {e}"
-            )
-            session.rollback()  # rollback so future queries won't fail
+        # Periodic progress update every 30 seconds
+        if (time.time() - last_report_time) >= 30:
+            remaining = total_users - processed_count
+            print(f"Processed {processed_count}/{total_users}. Remaining: {remaining}.")
+            last_report_time = time.time()
 
         # Sleep for rate limiting
         time.sleep(0.5)
 
+    # -------------- Completion --------------
     print(
         "Finished processing users. tv_channel_games rows now updated for each username."
     )
