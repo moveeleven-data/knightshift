@@ -34,19 +34,25 @@ and upsert logic.
 
 ```
 knightshift/
-├── src/
-│   ├── __init__.py
-│   ├── get_games_from_tv.py         # Fetch games from Lichess TV
-│   ├── get_games_from_users.py       # Fetch games for a particular user
-│   ├── update_all_games.py           # Update games in the database
-│   └── clean_invalid_games.py        # Data cleaning: remove invalid game records
 ├── docs/
 │   ├── README.md                     # Project overview, instructions, and docs
-│   ├── Postgres_Tables.txt           # Details about PostgreSQL tables
-│   └── Progress.txt                  # Archive or progress notes
-├── .env                              # Environment file with secrets
-├── .gitignore                        # Git ignore file
-└── requirements.txt                  # List of Python dependencies
+│   ├── CHANGESLOG.md                # Change history and version notes
+│   └── database_schema.md           # Markdown version of database schema
+├── src/
+│   ├── __init__.py                  # Makes src a Python package
+│   ├── clean_invalid_games.py       # Data cleaning: remove invalid game records
+│   ├── db_utils.py                  # Shared DB credential and connection utilities
+│   ├── get_games_from_tv.py         # Fetch games from Lichess TV
+│   ├── get_games_from_users.py     # Fetch games for a particular user
+│   ├── main.py                      # Orchestrator: runs full pipeline
+│   ├── update_all_games.py         # Update games in the database
+│   └── .env.local                   # Local environment variables
+├── .env.docker                      # Docker-specific environment variables
+├── .gitignore                       # Git ignore file
+├── Dockerfile                       # Docker image setup for the pipeline
+├── docker-compose.yml               # Defines and runs both DB and pipeline
+├── requirements.txt                 # List of Python dependencies
+└── run.sh                           # Shell script to run the project
 ```
 
 ---

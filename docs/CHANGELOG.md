@@ -2,22 +2,19 @@
 
 A running log of major development milestones, current state, and future plans for the KnightShift data pipeline.
 
-------------------------------------
+---------------------------------
 
-🗓 December 2024
+🗓 March 24, 2025 (Evening Update)
 
-Initial ingestion system established:
+PostgreSQL Connection Fix: Updated the .env.docker configuration to connect the Docker container to the local Postgres instance using host.docker.internal as the host.
 
-Get Games from Users:
-Fetches historical PGN data for specific Lichess user IDs and inserts it into the chess_games table.
+Docker Compose: Used docker compose up --build to run the pipeline, verified PostgreSQL container connectivity, and confirmed data ingestion functionality.
 
-Get Games from TV:
-Continuously streams games from all Lichess TV channels (e.g. blitz, rapid, horde) and inserts records into the tv_channel_games table. Each row includes metadata such as player names, ELO ratings, time controls, results, and PGN move text.
+Database Interaction: Confirmed that the Dockerized pipeline now interacts successfully with the tv_channel_games table in the local Postgres database via Docker.
 
-Update All Games:
-Enriches previously ingested records. Uses a Boolean updated column to selectively update stale or partial rows, optimizing for performance via indexed queries.
+Log Verification: Verified end-to-end pipeline execution, ensuring that logs are properly generated, and the data pipeline completes as expected.
 
-------------------------------------
+---------------------------------
 
 🗓 March 24, 2025
 
@@ -39,33 +36,74 @@ End-to-End Execution: Successfully ran the pipeline inside Docker using docker r
 
 Function Verification: Verified that run_tv_ingestion, run_update_pass, and run_cleaning_pass execute reliably.
 
-------------------------------------
+To run on Docker:
 
-🔭 Near-Term Plans (Q2 2025)
+Run dos2unix on run.sh to ensure it has Unix-style line endings. You can install it on your system if needed.
 
- Redirect standard output to a persistent log file (e.g., pipeline.log) via run.sh.
+If you're on Windows, run dos2unix using Git Bash or other terminal tools. If dos2unix is not installed, run the following command:
 
- Dockerize the entire application (handling .env, credentials, and PostgreSQL integration).
+bash
+Copy
+Edit
+dos2unix run.sh
+To build the Docker image (make sure you're in the project directory where the Dockerfile is):
 
- Set up local automation via cron (Linux/WSL) or Task Scheduler (Windows).
+bash
+Copy
+Edit
+docker build -t knightshift-pipeline .
+Run the Docker container with logs:
 
-⚙️ Mid-Term Goals (Spring 2025)
+bash
+Copy
+Edit
+docker run -it --env-file .env.docker knightshift-pipeline
 
- Validate ingested game records with basic data quality checks (e.g., ELO ranges, valid PGN structure).
+---------------------------------
 
- Investigate and resolve source of invalid game IDs.
+🗓 December 2024
 
- Partition tv_channel_games table by ingestion date for scalability.
+Initial ingestion system established:
 
- Add monitoring utilities to surface ingestion stats and error rates.
+Get Games from Users: Fetches historical PGN data for specific Lichess user IDs and inserts it into the chess_games table.
 
-🚀 Long-Term Vision (Summer 2025)
+Get Games from TV: Continuously streams games from all Lichess TV channels (e.g., blitz, rapid, horde) and inserts records into the tv_channel_games table. Each row includes metadata such as player names, ELO ratings, time controls, results, and PGN move text.
 
- Stage raw data in AWS S3 and archive invalid records.
+Update All Games: Enriches previously ingested records. Uses a Boolean updated column to selectively update stale or partial rows, optimizing for performance via indexed queries.
 
- Deploy containerized ingestion pipeline to AWS (ECS or EC2).
+---------------------------------
 
- Integrate external sources (e.g., FIDE ratings, Kaggle archives).
+Near-Term Plans (Q2 2025)
 
- Expand analytics layer: Redshift, dashboards via QuickSight or Metabase.
+Redirect standard output to a persistent log file (e.g., pipeline.log) via run.sh.
+
+Dockerize the entire application (handling .env, credentials, and PostgreSQL integration).
+
+Set up local automation via cron (Linux/WSL) or Task Scheduler (Windows).
+
+
+Mid-Term Goals (Spring 2025)
+
+Validate ingested game records with basic data quality checks (e.g., ELO ranges, valid PGN structure).
+
+Investigate and resolve the source of invalid game IDs.
+
+Partition tv_channel_games table by ingestion date for scalability.
+
+Add monitoring utilities to surface ingestion stats and error rates.
+
+
+Long-Term Vision (Summer 2025)
+
+Stage raw data in AWS S3 and archive invalid records.
+
+Deploy containerized ingestion pipeline to AWS (ECS or EC2).
+
+Integrate external sources (e.g., FIDE ratings, Kaggle archives).
+
+Expand analytics layer: Redshift, dashboards via QuickSight or Metabase.
+
+Fix Get Games from Users: Investigate and resolve the current issues with
+fetching PGN data for specific Lichess user IDs, ensuring
+functionality for future data ingestion.
 

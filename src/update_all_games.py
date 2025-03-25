@@ -3,6 +3,7 @@ import re
 import sys
 import time
 import json
+from pathlib import Path
 
 import requests
 import boto3
@@ -26,7 +27,7 @@ from sqlalchemy.pool import QueuePool
 from db_utils import load_db_credentials, get_database_url, get_lichess_token
 
 
-load_dotenv()  # Let Docker supply .env.docker
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env.local")
 
 creds = load_db_credentials()
 print("LOADED DB CREDS:", creds)
@@ -45,11 +46,6 @@ tv_channel_games_table = Table(
 
 Session = sessionmaker(bind=engine)
 session = Session()
-
-# Add the updated column if it doesn't exist
-with engine.connect() as conn:
-    conn.execute(text("ALTER TABLE tv_channel_games ADD COLUMN IF NOT EXISTS updated BOOLEAN DEFAULT FALSE;"))
-    conn.execute(text("ANALYZE tv_channel_games;"))  # Update table statistics
 
 def fetch_game_moves(game_id):
     url = f"https://lichess.org/game/export/{game_id}"
@@ -99,8 +95,8 @@ def run_update_pass():
     # Count how many rows need updating
     with engine.connect() as conn:
         result = conn.execute(
-        text("SELECT COUNT(*) FROM tv_channel_games WHERE updated = FALSE;")
-    )
+            text("SELECT COUNT(*) FROM tv_channel_games WHERE updated = FALSE;")
+        )
     total_to_update = result.scalar()
 
     print(f"Total games that need updating: {total_to_update}")
@@ -137,21 +133,20 @@ def run_update_pass():
                     raise
 
             # Minimal pause to avoid hitting rate limits
-            time.sleep(0.5)  
+            time.sleep(0.5)
 
             # Print periodic summary every 50 rows
             if (total_updated + total_failed) % 50 == 0:
                 elapsed_time = time.time() - start_time
                 percentage_complete = (
                     ((total_updated + total_failed) / total_to_update) * 100
-                    if total_to_update
-                    else 0
+                    if total_to_update > 0 else 0  # Avoid division by zero
                 )
                 eta_seconds = (
                     (elapsed_time / (total_updated + total_failed))
                     * (total_to_update - (total_updated + total_failed))
-                    if (total_updated + total_failed) > 0
-                    else 0
+                    if (total_updated + total_failed) > 0 and total_to_update > 0
+                    else 0  # Avoid division by zero
                 )
                 print(
                     f"Total rows processed: {total_updated + total_failed}, "
@@ -162,7 +157,7 @@ def run_update_pass():
 
     # Final summary
     elapsed_time = time.time() - start_time
-    percentage_complete = (total_updated / (total_updated + total_failed)) * 100
+    percentage_complete = (total_updated / (total_updated + total_failed)) * 100 if (total_updated + total_failed) > 0 else 0
     print(f"Update complete. Total games updated: {total_updated}, Total games failed: {total_failed}, "
           f"Percentage complete: {percentage_complete:.2f}%, Elapsed time: {elapsed_time:.2f} seconds")
 
