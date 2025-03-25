@@ -6,8 +6,6 @@ import json
 from pathlib import Path
 
 import requests
-import boto3
-from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 from requests.exceptions import HTTPError
 from sqlalchemy import (
@@ -19,6 +17,9 @@ from sqlalchemy import (
     update,
     select,
     Boolean,
+    Integer,
+    Date,
+    Time,
     text,
 )
 from sqlalchemy.orm import sessionmaker
@@ -26,62 +27,135 @@ from sqlalchemy.pool import QueuePool
 
 from db_utils import load_db_credentials, get_database_url, get_lichess_token
 
-
 load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env.local")
 
 creds = load_db_credentials()
-print("LOADED DB CREDS:", creds)
 DATABASE_URL = get_database_url(creds)
 
-engine = create_engine(DATABASE_URL, poolclass=QueuePool,
-                       pool_size=10, max_overflow=20)
+engine = create_engine(DATABASE_URL, poolclass=QueuePool, pool_size=10, max_overflow=20)
 metadata = MetaData()
 
 tv_channel_games_table = Table(
-    'tv_channel_games', metadata,
-    Column('id', String, primary_key=True),
-    Column('moves', String),
-    Column('updated', Boolean, default=False)  # Add updated column
+    "tv_channel_games",
+    metadata,
+    Column("id", String, primary_key=True),
+    Column("moves", String),
+    Column("updated", Boolean, default=False),
+    Column("result", String),
+    Column("termination", String),
+    Column("utc_date", Date),
+    Column("utc_time", Time),
+    Column("white_elo", Integer),
+    Column("black_elo", Integer),
+    Column("variant", String),
+    Column("time_control", String),
+    Column("eco", String),
+    Column("opening", String)
 )
 
 Session = sessionmaker(bind=engine)
 session = Session()
 
+
 def fetch_game_moves(game_id):
     url = f"https://lichess.org/game/export/{game_id}"
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
-        # retrieve token from env variables
         "Authorization": f"Bearer {get_lichess_token()}",
     }
     response = requests.get(url, headers=headers)
+
+    # Check if response is OK
     if response.status_code == 200:
         pgn_text = response.text
+
+        # Parse the PGN headers to get game data
+        game_data = parse_game_data_from_pgn(pgn_text)
+
+        # Extract the moves
         moves = extract_moves_from_pgn(pgn_text)
-        return moves
+
+        return moves, game_data
     else:
-        print(f"Failed to fetch moves for game {game_id}: {response.status_code}, {response.text}")
-        return None
+        print(
+            f"Failed to fetch moves for game {game_id}: {response.status_code}, {response.text}"
+        )
+        return None, None
+
+
+def parse_game_data_from_pgn(pgn_text):
+    game_data = {}
+
+    # Use regex to extract the relevant PGN headers
+    headers = {
+        "result": r"\[Result\s\"([^\"]+)\"",
+        "termination": r"\[Termination\s\"([^\"]+)\"",
+        "utc_date": r"\[UTCDate\s\"([^\"]+)\"",
+        "utc_time": r"\[UTCTime\s\"([^\"]+)\"",
+        "white_elo": r"\[WhiteElo\s\"([^\"]+)\"",
+        "black_elo": r"\[BlackElo\s\"([^\"]+)\"",
+        "variant": r"\[Variant\s\"([^\"]+)\"",
+        "time_control": r"\[TimeControl\s\"([^\"]+)\"",
+        "eco": r"\[ECO\s\"([^\"]+)\"",
+        "opening": r"\[Opening\s\"([^\"]+)\"",
+    }
+
+    for field, regex in headers.items():
+        match = re.search(regex, pgn_text)
+        if match:
+            game_data[field] = match.group(1)
+
+    return game_data
+
 
 def extract_moves_from_pgn(pgn_text):
     moves_section = False
     moves = []
     for line in pgn_text.splitlines():
-        if not line.startswith('[') and line.strip():
+        if not line.startswith("[") and line.strip():
             moves_section = True
         if moves_section:
-            # Remove %clk annotations
-            line = re.sub(r'\{[^}]*\}', '', line).strip()
+            line = re.sub(r"\{[^}]*\}", "", line).strip()
             moves.append(line)
-    return ' '.join(moves)
+    return " ".join(moves)
 
-def update_game_record(game_id, moves):
+
+def update_game_record(game_id, moves, game_data):
+    # Handle Elo fields with "?" by converting them to None
+    white_elo = None if game_data["white_elo"] == "?" else int(game_data["white_elo"])
+    black_elo = None if game_data["black_elo"] == "?" else int(game_data["black_elo"])
+
     session.execute(
         update(tv_channel_games_table)
         .where(tv_channel_games_table.c.id == game_id)
-        .values(moves=moves, updated=True)  # Set updated to True
+        .values(
+            moves=moves,
+            result=game_data["result"],
+            termination=game_data["termination"],
+            utc_date=game_data["utc_date"],
+            utc_time=game_data["utc_time"],
+            white_elo=white_elo,
+            black_elo=black_elo,
+            variant=game_data["variant"],
+            time_control=game_data["time_control"],
+            eco=game_data["eco"],
+            opening=game_data["opening"],
+        )
     )
-    session.commit()
+
+    # Set 'updated=True' if the game is finished (i.e., result is not '*' and termination is not 'Unterminated')
+    if game_data["result"] != "*" and game_data["termination"] != "Unterminated":
+        session.execute(
+            update(tv_channel_games_table)
+            .where(tv_channel_games_table.c.id == game_id)
+            .values(updated=True)  # Mark as updated
+        )
+
+    try:
+        session.commit()
+    except Exception as e:
+        print(f"Error during commit: {e}")
+        session.rollback()  # Rollback in case of error
 
 
 def run_update_pass():
@@ -90,38 +164,51 @@ def run_update_pass():
     total_failed = 0
     start_time = time.time()
 
-    print("Starting the update operation...")
-
-    # Count how many rows need updating
-    with engine.connect() as conn:
-        result = conn.execute(
-            text("SELECT COUNT(*) FROM tv_channel_games WHERE updated = FALSE;")
+    # Fetch all games where termination is 'Unterminated' or result is '*', and updated is False
+    games = session.execute(
+        select(tv_channel_games_table).where(
+            (
+                (tv_channel_games_table.c.termination == "Unterminated")
+                | (tv_channel_games_table.c.result == "*")
+            )
+            & (
+                tv_channel_games_table.c.updated == False
+            )  # Only fetch rows where updated is False
         )
-    total_to_update = result.scalar()
+    ).fetchall()
 
-    print(f"Total games that need updating: {total_to_update}")
+    num_games = len(games)
+    print(f"Fetched {num_games} games to update.")  # Debug log
 
-    # Check if the index is being used
-    with engine.connect() as conn:
-        result = conn.execute(text("EXPLAIN SELECT *"
-        "FROM tv_channel_games WHERE updated = FALSE LIMIT 1;"))
-        for row in result:
-            print(row)
+    if num_games == 0:
+        print("No games found to update.")
+        return
 
-    while True:
-        games = session.execute(
-            select(tv_channel_games_table).where(tv_channel_games_table.c.updated == False).limit(batch_size)
-        ).fetchall()
+    # Estimate time for completion
+    estimated_time_sec = num_games * 0.5  # assuming each game takes ~0.5 seconds
+    estimated_time_min = estimated_time_sec // 60  # Whole minutes
+    estimated_time_rem_sec = estimated_time_sec % 60  # Remaining seconds
 
-        if not games:
-            break
+    # Print human-readable estimated time
+    if estimated_time_min == 0:
+        print(f"Estimated time to process: {int(estimated_time_rem_sec)} seconds.")
+    else:
+        print(
+            f"Estimated time to process: {int(estimated_time_min)} minutes {int(estimated_time_rem_sec)} seconds."
+        )
 
-        for game in games:
-            game_id = game.id
+    last_report_time = time.time()
+
+    for idx, game in enumerate(games):
+        game_id = game.id
+
+        # Fetch both moves and game data
+        moves, game_data = fetch_game_moves(game_id)
+
+        if game_data:  # If game data is found, update the record
             try:
-                moves = fetch_game_moves(game_id)
                 if moves:
-                    update_game_record(game_id, moves)
+                    update_game_record(game_id, moves, game_data)
                     total_updated += 1
                 else:
                     total_failed += 1
@@ -132,35 +219,24 @@ def run_update_pass():
                 else:
                     raise
 
-            # Minimal pause to avoid hitting rate limits
-            time.sleep(0.5)
+        # Periodic update every 30 seconds
+        if time.time() - last_report_time >= 30:
+            elapsed_time = time.time() - start_time
+            processed = total_updated + total_failed
+            remaining = num_games - processed
+            estimated_remaining_sec = remaining * 0.65
+            estimated_remaining_min = estimated_remaining_sec // 60  # Whole minutes
+            estimated_remaining_rem_sec = estimated_remaining_sec % 60  # Remaining seconds
 
-            # Print periodic summary every 50 rows
-            if (total_updated + total_failed) % 50 == 0:
-                elapsed_time = time.time() - start_time
-                percentage_complete = (
-                    ((total_updated + total_failed) / total_to_update) * 100
-                    if total_to_update > 0 else 0  # Avoid division by zero
-                )
-                eta_seconds = (
-                    (elapsed_time / (total_updated + total_failed))
-                    * (total_to_update - (total_updated + total_failed))
-                    if (total_updated + total_failed) > 0 and total_to_update > 0
-                    else 0  # Avoid division by zero
-                )
-                print(
-                    f"Total rows processed: {total_updated + total_failed}, "
-                    f"Elapsed time: {elapsed_time:.2f} seconds, "
-                    f"Progress: {percentage_complete:.2f}%, "
-                    f"Estimated time remaining: {eta_seconds / 60:.2f} minutes"
-                )
+            print(f"Processed {processed}/{num_games} games. "
+                f"Remaining: {remaining}. Estimated time remaining: {int(estimated_remaining_min)} minutes {int(estimated_remaining_rem_sec)} seconds.")
+            last_report_time = time.time()
 
-    # Final summary
-    elapsed_time = time.time() - start_time
-    percentage_complete = (total_updated / (total_updated + total_failed)) * 100 if (total_updated + total_failed) > 0 else 0
-    print(f"Update complete. Total games updated: {total_updated}, Total games failed: {total_failed}, "
-          f"Percentage complete: {percentage_complete:.2f}%, Elapsed time: {elapsed_time:.2f} seconds")
+        # Minimal pause to avoid hitting rate limits
+        time.sleep(0.5)
 
+    # Final completion message
+    print("Update process completed successfully.")
 
 if __name__ == "__main__":
     run_update_pass()
