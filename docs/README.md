@@ -35,24 +35,31 @@ and upsert logic.
 ```
 knightshift/
 ├── docs/
-│   ├── README.md                     # Project overview, instructions, and docs
-│   ├── CHANGESLOG.md                # Change history and version notes
-│   └── database_schema.md           # Markdown version of database schema
 ├── src/
-│   ├── __init__.py                  # Makes src a Python package
-│   ├── clean_invalid_games.py       # Data cleaning: remove invalid game records
-│   ├── db_utils.py                  # Shared DB credential and connection utilities
-│   ├── get_games_from_tv.py         # Fetch games from Lichess TV
-│   ├── get_games_from_users.py     # Fetch games for a particular user
-│   ├── main.py                      # Orchestrator: runs full pipeline
-│   ├── update_all_games.py         # Update games in the database
-│   └── .env.local                   # Local environment variables
-├── .env.docker                      # Docker-specific environment variables
-├── .gitignore                       # Git ignore file
-├── Dockerfile                       # Docker image setup for the pipeline
-├── docker-compose.yml               # Defines and runs both DB and pipeline
-├── requirements.txt                 # List of Python dependencies
-└── run.sh                           # Shell script to run the project
+│   ├── ingestion/
+│   │   ├── get_games_from_tv.py
+│   │   └── backfill_user_profiles.py
+│   ├── cleaning/
+│   │   └── clean_invalid_games.py
+│   ├── enrichment/
+│   │   └── N/A
+│   ├── utils/
+│   │   ├── logging_utils.py
+│   │   ├── pgn_parser.py
+│   │   ├── init__.py
+│   │   └── utils.py
+│   ├── archive/        ← for inactive scripts
+│   │   ├── check_urls_of_games.py
+│   │   ├── update_all_games.py
+│   │   └── get_games_from_users.py
+│   └── main.py
+├── config/
+│   └── .env.local
+│   └── .env.docker
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+└── run.sh
 ```
 
 ---

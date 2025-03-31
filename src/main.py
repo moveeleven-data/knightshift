@@ -1,6 +1,6 @@
 import logging
 from get_games_from_tv import run_tv_ingestion
-from update_all_games import run_update_pass
+from src.archive.update_all_games import run_update_pass
 from clean_invalid_games import run_cleaning_pass
 
 logging.basicConfig(

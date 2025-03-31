@@ -2,6 +2,78 @@
 
 A running log of major development milestones, current state, and future plans for the KnightShift data pipeline.
 
+🗓 March 31, 2025
+
+Project Restructuring & Modularization:
+
+Restructured src/ into ingestion/, cleaning/, enrichment/, archive/, and utils/ folders.
+
+Moved inactive scripts (e.g., update_all_games.py, get_games_from_users.py) into archive/.
+
+Created utils/pgn_parser.py to handle PGN parsing independently (used in get_games_from_tv.py).
+
+
+User Profile Pipeline Improvements:
+
+Renamed add_users.py → backfill_user_profiles.py for clarity.
+
+Refactored script to improve modularity, readability, and logging.
+
+Improved error handling and exit behavior on failed inserts or malformed API data.
+
+
+Data Cleaning Enhancements:
+
+Expanded validate_tv_channel_games.py to check for missing required fields (white, black, moves, result).
+
+Validated Lichess game URLs and cleaned malformed ELO values.
+
+Removed invalid rows and marked cleaned records with updated=True and is_valid=True.
+
+
+Docs & Configuration:
+
+Updated README to reflect new project structure and script responsibilities.
+
+Confirmed consistency in .env.local, logging format, and config loading across all modules.
+
+
+
+🗓 March 30, 2025
+
+API Hardening & Rate Limit Safety:
+
+Standardized persistent requests.Session() usage across all API scripts.
+
+Added early exit on HTTP 429 (rate limit) in all relevant scripts.
+
+Centralized error handling and added backoff logic where needed.
+
+User Profile Pipeline Improvements:
+
+
+Refined add_users.py with:
+
+Connection pooling,
+
+API robustness,
+
+Batch pausing after large inserts.
+
+
+Game Scripts Enhancements:
+
+get_games_from_tv.py and update_all_games.py updated for API safety and performance.
+
+clean_invalid_games.py confirmed as safe (no Lichess API usage).
+
+
+Schema & Docs:
+
+Documented lichess_users table schema.
+
+Added primary key and index sections for all major tables.
+
 ---------------------------------
 
 🗓 March 25, 2025
@@ -14,6 +86,7 @@ Designed and created the lichess_users table to store enriched user-level profil
 
 Selected the most meaningful subset of attributes from the Lichess user API and mapped them to appropriate Postgres column types.
 
+
 Profile Ingestion Script:
 
 Built a new standalone ingestion script that fetches public user profile data from the Lichess API.
@@ -23,6 +96,7 @@ Extracted unique usernames from the white and black columns of the tv_channel_ga
 Handled edge cases (e.g., already-ingested users, duplicate usernames across games).
 
 Converted and inserted cleaned user data into lichess_users.
+
 
 Tracking State with profile_updated:
 

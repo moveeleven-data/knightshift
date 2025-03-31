@@ -25,7 +25,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 
-from db_utils import load_db_credentials, get_database_url, get_lichess_token
+from src.utils.db_utils import load_db_credentials, get_database_url, get_lichess_token
 
 
 # Load environment variables
