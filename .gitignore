@@ -1,3 +1,13 @@
+# Logs
+logs/*
+!logs/.gitkeep
+
+# SQLite test DBs
+*.sqlite3
+*.sqlite
+
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

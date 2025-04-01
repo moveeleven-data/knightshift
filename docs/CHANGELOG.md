@@ -2,6 +2,41 @@
 
 A running log of major development milestones, current state, and future plans for the KnightShift data pipeline.
 
+🗓 April 1, 2025
+
+Pipeline Execution & Modularization:
+
+Modularized main.py into run_ingestion.py, run_cleaning.py, and run_enrichment.py under src/pipeline/.
+
+Scripts can now be triggered independently via Airflow DAGs, cron jobs, or CLI.
+
+Created run_knightshift.bat for Windows-friendly orchestration.
+
+
+Project Structure & Docs:
+
+Added README.md files to all major folders for self-contained clarity and navigation.
+
+Renamed archive/ to legacy/ and moved inactive scripts inside for better organization.
+
+Created schemas/ folder with version-controlled schema definitions for Postgres tables.
+
+Created logs/ folder and redirected script logging output there.
+
+
+Testing Foundations:
+
+Created tests/ folder with starter test modules (test_utils.py, test_pgn_parser.py, test_validation_logic.py).
+
+Prepared the project for future Pytest coverage.
+
+
+Configuration & Git Hygiene:
+
+Updated .gitignore to handle logs/, .env*, compiled files, and test artifacts.
+
+Cleaned up stray log.txt and added .gitkeep to persist logs/ structure.
+
 
 🗓 March 31, 2025
 

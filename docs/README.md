@@ -34,42 +34,54 @@ and upsert logic.
 
 ```
 knightshift/
+├── logs/
 ├── docs/
+│   ├── CHANGELOG.md
+│   ├── README.md
+│   └── schema_reference.md
 ├── src/
 │   ├── pipeline/    
+│   │   ├── README.md
 │   │   ├── run_cleaning.py
 │   │   ├── run_enrichment.py
 │   │   └── run_ingestion.py
 │   ├── ingestion/
+│   │   ├── README.md
 │   │   └── get_games_from_tv.py
 │   ├── cleaning/
+│   │   ├── README.md
 │   │   └── validate_tv_channel_games.py
 │   ├── enrichment/
+│   │   ├── README.md
 │   │   └── backfill_user_profiles.py
 │   ├── utils/
+│   │   ├── README.md
 │   │   ├── logging_utils.py
 │   │   ├── pgn_parser.py
-│   │   ├── init__.py
-│   │   └── utils.py
-│   ├── archive/        ← for inactive scripts
+│   │   ├── db_utils.py
+│   │   └── init__.py
+│   ├── legacy/
 │   │   ├── check_urls_of_games.py
 │   │   ├── update_all_games.py
 │   │   └── get_games_from_users.py
 │   └── main.py
-├── config/             ← Clean config/ folder for environment separation
+├── config/
 │   └── .env.local
 │   └── .env.docker
 ├── tests/
+│   ├── README.md
 │   ├── test_pgn_parser.py
 │   ├── test_utils.py
 │   └── test_validation_logic.py
 ├── schemas/
+│   ├── README.md
 │   ├── CHANGELOG.md
 │   ├── lichess_users.sql
 │   └── tv_channel_games.sql
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
+├── run_knightshift.bat
 └── run.sh
 ```
 
