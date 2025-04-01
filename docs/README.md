@@ -36,10 +36,14 @@ and upsert logic.
 knightshift/
 ├── docs/
 ├── src/
+│   ├── pipeline/    
+│   │   ├── run_cleaning.py
+│   │   ├── run_enrichment.py
+│   │   └── run_ingestion.py
 │   ├── ingestion/
 │   │   └── get_games_from_tv.py
 │   ├── cleaning/
-│   │   └── sanitize_game_records.py
+│   │   └── validate_tv_channel_games.py
 │   ├── enrichment/
 │   │   └── backfill_user_profiles.py
 │   ├── utils/
@@ -52,9 +56,17 @@ knightshift/
 │   │   ├── update_all_games.py
 │   │   └── get_games_from_users.py
 │   └── main.py
-├── config/
+├── config/             ← Clean config/ folder for environment separation
 │   └── .env.local
 │   └── .env.docker
+├── tests/
+│   ├── test_pgn_parser.py
+│   ├── test_utils.py
+│   └── test_validation_logic.py
+├── schemas/
+│   ├── CHANGELOG.md
+│   ├── lichess_users.sql
+│   └── tv_channel_games.sql
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
