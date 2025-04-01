@@ -24,8 +24,6 @@ from sqlalchemy import (
     Date,
     Time,
     MetaData,
-    select,
-    update,
 )
 from sqlalchemy.orm import sessionmaker
 
@@ -37,11 +35,12 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.append(str(PROJECT_ROOT))
 
 # -------------------------------------------------------------------
-# Imports from src.utils
+# Imports from src.utils and src.db
 # -------------------------------------------------------------------
 from src.utils.db_utils import load_db_credentials, get_database_url, get_lichess_token
 from src.utils.logging_utils import setup_logger
 from src.utils.pgn_parser import parse_pgn_lines
+from src.db.game_upsert import build_game_data, upsert_game
 
 # -------------------------------------------------------------------
 # Logging Setup
@@ -106,91 +105,11 @@ http_session.headers.update(
 
 
 # -------------------------------------------------------------------
-# Utility / Helper Functions
+# Core Ingestion Functions
 # -------------------------------------------------------------------
-def parse_rating(rating_value: str) -> int | None:
-    """
-    Safely parse a rating string into an int. Returns None on failure.
-    """
-    try:
-        return int(rating_value)
-    except (ValueError, TypeError):
-        return None
-
-
-def build_game_data(game: dict) -> dict:
-    """
-    Convert parsed PGN dictionary into a data structure suitable for DB insertion.
-    """
-    return {
-        "id": game.get("site", "").split("/")[-1],
-        "event": game.get("event", ""),
-        "site": game.get("site", ""),
-        "date": (
-            datetime.strptime(game.get("date", "1970.01.01"), "%Y.%m.%d").date()
-            if game.get("date")
-            else None
-        ),
-        "white": game.get("white", ""),
-        "black": game.get("black", ""),
-        "result": game.get("result", ""),
-        "utc_date": (
-            datetime.strptime(game.get("utcdate", "1970.01.01"), "%Y.%m.%d").date()
-            if game.get("utcdate")
-            else None
-        ),
-        "utc_time": (
-            datetime.strptime(game.get("utctime", "00:00:00"), "%H:%M:%S").time()
-            if game.get("utctime")
-            else None
-        ),
-        "white_elo": parse_rating(game.get("whiteelo")),
-        "black_elo": parse_rating(game.get("blackelo")),
-        "white_title": game.get("whitetitle", ""),
-        "black_title": game.get("blacktitle", ""),
-        "variant": game.get("variant", ""),
-        "time_control": game.get("timecontrol", ""),
-        "eco": game.get("eco", ""),
-        "termination": game.get("termination", ""),
-        "moves": game.get("moves", ""),
-    }
-
-
-def upsert_game(game_data: dict) -> bool:
-    """
-    Upsert (insert or update) a game record into tv_channel_games.
-    Return:
-        True if record was updated,
-        False if inserted or if no valid game_id is found.
-    """
-    game_id = game_data.get("id")
-    if not game_id:
-        logger.warning("No valid game ID found; skipping row.")
-        return False
-
-    existing_game = session.execute(
-        select(tv_channel_games_table).where(tv_channel_games_table.c.id == game_id)
-    ).fetchone()
-
-    if existing_game is None:
-        session.execute(tv_channel_games_table.insert().values(game_data))
-        session.commit()
-        logger.info(f"Inserted new game {game_id}.")
-        return False  # Means inserted
-    else:
-        session.execute(
-            update(tv_channel_games_table)
-            .where(tv_channel_games_table.c.id == game_id)
-            .values(game_data)
-        )
-        session.commit()
-        logger.info(f"Updated existing game {game_id}.")
-        return True  # Means updated
-
-
 def process_pgn_block(
     pgn_lines: list[bytes], updated_games: list[str], added_games: list[str]
-):
+) -> None:
     """
     Parse a block of PGN lines, build the game data, and upsert into DB.
     Collect IDs of updated vs. added games in provided lists.
@@ -198,7 +117,7 @@ def process_pgn_block(
     game_dict = parse_pgn_lines(pgn_lines)
     if "site" in game_dict:
         data_for_db = build_game_data(game_dict)
-        was_updated = upsert_game(data_for_db)
+        was_updated = upsert_game(session, tv_channel_games_table, data_for_db)
         game_id = data_for_db["id"]
         if was_updated:
             updated_games.append(game_id)
@@ -206,14 +125,11 @@ def process_pgn_block(
             added_games.append(game_id)
 
 
-# -------------------------------------------------------------------
-# Core Ingestion Functions
-# -------------------------------------------------------------------
 def fetch_ongoing_games(
-    channel: str, updated_games: list[str], added_games: list[str], max_retries=3
-):
+    channel: str, updated_games: list[str], added_games: list[str], max_retries: int = 3
+) -> None:
     """
-    Fetch ongoing games from Lichess TV for a specific channel and upsert them.
+    Fetch ongoing games from the Lichess TV API for a specific channel and upsert them.
     Retries on non-429 errors, streams PGN data line by line.
     """
     url = f"https://lichess.org/api/tv/{channel}"
@@ -226,19 +142,17 @@ def fetch_ongoing_games(
             )
             sys.exit(1)
         if response.status_code == 200:
-            # Successful response, proceed
             break
         else:
             logger.warning(
-                f"Channel '{channel}' request failed with {response.status_code}. "
-                f"Retry {attempt}/{max_retries}."
+                f"Channel '{channel}' request failed with {response.status_code}. Retry {attempt}/{max_retries}."
             )
             time.sleep(5)
     else:
         logger.error(
             f"Failed to connect to channel '{channel}' after {max_retries} retries."
         )
-        return  # Stop this channel
+        return
 
     if response.status_code == 200:
         parse_and_upsert_response(response, updated_games, added_games)
@@ -250,7 +164,7 @@ def fetch_ongoing_games(
 
 def parse_and_upsert_response(
     response, updated_games: list[str], added_games: list[str]
-):
+) -> None:
     """
     Given a streaming response from Lichess TV,
     parse PGN blocks and upsert them into the DB.
@@ -260,16 +174,15 @@ def parse_and_upsert_response(
         if line.strip():
             pgn_lines.append(line)
         else:
-            # Blank line => one complete PGN block
-            if pgn_lines:
+            if pgn_lines:  # blank line => complete PGN block
                 process_pgn_block(pgn_lines, updated_games, added_games)
                 pgn_lines = []
 
 
-def run_tv_ingestion():
+def run_tv_ingestion() -> None:
     """
-    Main loop over Lichess TV channels. Continues ingesting until TIME_LIMIT is reached or
-    MAX_GAMES is fetched (triggering a RATE_LIMIT_PAUSE).
+    Main loop over Lichess TV channels.
+    Continues ingesting until TIME_LIMIT is reached or MAX_GAMES is fetched.
     """
     channels = [
         "bullet",
@@ -295,26 +208,21 @@ def run_tv_ingestion():
         updated_games: list[str] = []
         added_games: list[str] = []
 
-        # Fetch games for each channel
         for channel in channels:
             fetch_ongoing_games(channel, updated_games, added_games)
-            # Optional channel-specific logging
             if channel in {"rapid", "horde", "kingOfTheHill"}:
                 logger.info(f"Fetching '{channel}' games...")
 
-        # Summarize batch
         logger.info(
             f"Batch complete: {len(updated_games)} updated, {len(added_games)} added."
         )
         total_games_count += len(updated_games) + len(added_games)
 
-        # Check if we've hit the max limit
         if total_games_count >= MAX_GAMES:
             logger.info(f"Fetched {MAX_GAMES} games. Pausing for 15 minutes...")
             time.sleep(RATE_LIMIT_PAUSE)
-            total_games_count = 0  # Reset counter
+            total_games_count = 0
 
-        # Slight delay before next loop
         logger.info("Still connected and fetching next batch of games...")
         time.sleep(SLEEP_INTERVAL)
 

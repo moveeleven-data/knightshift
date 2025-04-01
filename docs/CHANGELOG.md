@@ -2,6 +2,8 @@
 
 A running log of major development milestones, current state, and future plans for the KnightShift data pipeline.
 
+---------------------------------
+
 🗓 April 1, 2025
 
 Pipeline Execution & Modularization:
@@ -15,38 +17,48 @@ Created run_knightshift.bat for Windows-friendly orchestration.
 
 Project Structure & Docs:
 
-Added README.md files to all major folders for self-contained clarity and navigation.
+Added README.md files to all major folders (src/db, utils, pipeline, etc.) for self-contained clarity and navigation.
 
 Renamed archive/ to legacy/ and moved inactive scripts inside for better organization.
 
 Created schemas/ folder with version-controlled schema definitions for Postgres tables.
 
-Created logs/ folder and redirected script logging output there.
+Created logs/ folder and redirected script logging output there. .gitkeep ensures folder is preserved in version control.
 
 
 Testing Foundations Expanded:
 
 Finalized tests/ structure and Pytest setup for consistent local execution.
 
+
 Added unit tests for:
 
-- pgn_parser.py (PGN header + move parsing)
+pgn_parser.py (PGN header + move parsing)
 
-- db_utils.py (DB URL + token handling)
+db_utils.py (DB URL + token handling)
 
-- validate_tv_channel_games.py (data cleaning logic and URL validation)
+get_games_from_tv.py (build_game_data, parse_rating logic)
 
-- get_games_from_tv.py (PGN ingestion and transformation logic)
+Verified all tests pass with proper path resolution and local import handling.
 
-Verified all tests pass with proper path resolution and mocks.
+
+Database Logic Refactor:
+
+Extracted build_game_data() and upsert_game() into src/db/game_upsert.py.
+
+Added full type hints, robust error handling, and transaction safety via session.begin().
+
+Improved testability by decoupling ingestion from persistence logic.
 
 
 Configuration & Git Hygiene:
 
-Updated .gitignore to handle logs/, .env*, compiled files, and test artifacts.
+Updated .gitignore to handle logs/, .env*, compiled files, and Pytest artifacts.
 
-Cleaned up stray log.txt and added .gitkeep to persist logs/ structure.
+Cleaned up stray log.txt files and added .gitkeep to persist logs/ structure.
 
+
+---------------------------------
 
 🗓 March 31, 2025
 
@@ -86,6 +98,8 @@ Confirmed consistency in .env.local, logging format, and config loading across a
 Added logging for every script to standardize output and facilitate troubleshooting.
 
 
+---------------------------------
+
 🗓 March 30, 2025
 
 API Hardening & Rate Limit Safety:
@@ -120,6 +134,7 @@ Schema & Docs:
 Documented lichess_users table schema.
 
 Added primary key and index sections for all major tables.
+
 
 ---------------------------------
 
