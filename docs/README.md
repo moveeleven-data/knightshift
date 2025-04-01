@@ -37,12 +37,11 @@ knightshift/
 ├── docs/
 ├── src/
 │   ├── ingestion/
-│   │   ├── get_games_from_tv.py
-│   │   └── backfill_user_profiles.py
+│   │   └── get_games_from_tv.py
 │   ├── cleaning/
-│   │   └── clean_invalid_games.py
+│   │   └── sanitize_game_records.py
 │   ├── enrichment/
-│   │   └── N/A
+│   │   └── backfill_user_profiles.py
 │   ├── utils/
 │   │   ├── logging_utils.py
 │   │   ├── pgn_parser.py

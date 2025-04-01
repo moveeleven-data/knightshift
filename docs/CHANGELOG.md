@@ -2,6 +2,7 @@
 
 A running log of major development milestones, current state, and future plans for the KnightShift data pipeline.
 
+
 🗓 March 31, 2025
 
 Project Restructuring & Modularization:
@@ -37,6 +38,7 @@ Updated README to reflect new project structure and script responsibilities.
 
 Confirmed consistency in .env.local, logging format, and config loading across all modules.
 
+Added logging for every script to standardize output and facilitate troubleshooting.
 
 
 🗓 March 30, 2025
