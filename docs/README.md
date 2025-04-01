@@ -64,6 +64,7 @@ knightshift/
 │   │   ├── check_urls_of_games.py
 │   │   ├── update_all_games.py
 │   │   └── get_games_from_users.py
+│   ├── __init__.py
 │   └── main.py
 ├── config/
 │   └── .env.local
@@ -71,7 +72,8 @@ knightshift/
 ├── tests/
 │   ├── README.md
 │   ├── test_pgn_parser.py
-│   ├── test_utils.py
+│   ├── test_db_utils.py
+│   ├── test_get_games_from_tv.py
 │   └── test_validation_logic.py
 ├── schemas/
 │   ├── README.md
@@ -81,6 +83,7 @@ knightshift/
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
+├── pytest.ini
 ├── run_knightshift.bat
 └── run.sh
 ```

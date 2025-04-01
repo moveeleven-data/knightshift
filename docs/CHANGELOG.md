@@ -24,11 +24,21 @@ Created schemas/ folder with version-controlled schema definitions for Postgres 
 Created logs/ folder and redirected script logging output there.
 
 
-Testing Foundations:
+Testing Foundations Expanded:
 
-Created tests/ folder with starter test modules (test_utils.py, test_pgn_parser.py, test_validation_logic.py).
+Finalized tests/ structure and Pytest setup for consistent local execution.
 
-Prepared the project for future Pytest coverage.
+Added unit tests for:
+
+- pgn_parser.py (PGN header + move parsing)
+
+- db_utils.py (DB URL + token handling)
+
+- validate_tv_channel_games.py (data cleaning logic and URL validation)
+
+- get_games_from_tv.py (PGN ingestion and transformation logic)
+
+Verified all tests pass with proper path resolution and mocks.
 
 
 Configuration & Git Hygiene:

@@ -5,7 +5,7 @@ validate_tv_channel_games.py
 This script validates and cleans rows in the tv_channel_games table.
 It ensures that each row has the required fields (white, black, moves, result),
 validates the URL format, cleans Elo values, and then updates or deletes the row accordingly.
-Configuration parameters (e.g. TIME_LIMIT, SLEEP_INTERVAL, PAUSE_AFTER, PAUSE_DURATION) are read from environment variables.
+Configuration parameters are read from environment variables.
 Logs are written to both the console and a timestamped log file.
 """
 
@@ -49,25 +49,19 @@ logger = setup_logger(name="validate_tv_channel_games", level=logging.INFO)
 # --- Environment & Configuration ---
 load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env.local")
 creds = load_db_credentials()
-logger.info(
-    "Loaded DB credentials successfully."
-)  # In production, mask sensitive details.
+logger.info("Loaded DB credentials successfully.")
 DATABASE_URL = get_database_url(creds)
 engine = create_engine(DATABASE_URL)
 metadata = MetaData()
 
 # Configuration parameters
-TIME_LIMIT: int = int(
-    os.getenv("TIME_LIMIT", 60)
-)  # Total runtime in seconds (default: 60 for testing)
-SLEEP_INTERVAL: int = int(os.getenv("SLEEP_INTERVAL", 40))  # Seconds between batches
-PAUSE_AFTER: int = int(
+TIME_LIMIT = int(os.getenv("TIME_LIMIT", 60))  # Total runtime in seconds (for testing)
+SLEEP_INTERVAL = int(os.getenv("SLEEP_INTERVAL", 40))  # Seconds between batches
+PAUSE_AFTER = int(
     os.getenv("PAUSE_AFTER", 2500)
-)  # Number of rows to process before pausing
-PAUSE_DURATION: int = int(
-    os.getenv("PAUSE_DURATION", 900)
-)  # Pause duration in seconds (default: 15 minutes)
-THROTTLE_DELAY: float = 0.5  # Delay (in seconds) between processing rows
+)  # Rows processed before pausing (if needed)
+PAUSE_DURATION = int(os.getenv("PAUSE_DURATION", 900))  # Pause duration in seconds
+THROTTLE_DELAY = 0.5  # Delay (in seconds) between processing rows
 
 # --- Define tv_channel_games Table Schema (autoload current schema) ---
 tv_channel_games_table = Table("tv_channel_games", metadata, autoload_with=engine)
@@ -99,10 +93,10 @@ def is_valid_url(site: str) -> bool:
 
 def should_keep_row(row) -> tuple[bool, str]:
     """
-    Determine if a row has the minimum required fields: white, black, moves, and result.
+    Check that a row has the minimum required fields: white, black, moves, and result.
 
     Returns:
-        (bool, str): True and an empty string if the row is valid, or False and an error message.
+        (bool, str): (True, "") if valid; otherwise, (False, error_message)
     """
     required_fields = ["white", "black", "moves", "result"]
     for field in required_fields:
@@ -115,30 +109,18 @@ def should_keep_row(row) -> tuple[bool, str]:
     return True, ""
 
 
-def validate_and_clean() -> None:
+def process_row(row, malformed_url_counter: dict) -> tuple[bool, bool]:
     """
-    Validate and clean rows in tv_channel_games that have not been updated.
+    Process a single row: validate required fields, validate URL, clean Elo values,
+    and update the row in the database.
 
-    For each row:
-      1. Check that required fields are present.
-      2. Validate the URL format and update the 'url_valid' flag accordingly.
-      3. Clean Elo values.
-      4. Mark the row as updated and commit changes.
-    Logs progress and final statistics.
+    Returns:
+        (processed, was_deleted)
+        processed: True if the row was processed (updated or deleted)
+        was_deleted: True if the row was deleted.
     """
-    rows = session.execute(
-        select(tv_channel_games_table).where(tv_channel_games_table.c.updated == False)
-    ).fetchall()
-    total_rows = len(rows)
-    logger.info(f"Starting validation on {total_rows} rows from tv_channel_games.")
-
-    total_deleted = 0
-    total_updated = 0
-    start_time = time.time()
-    last_summary_time = start_time
-
-    for row in rows:
-        game_id = row.id
+    game_id = row.id
+    try:
         # Check required fields.
         valid, error_message = should_keep_row(row)
         if not valid:
@@ -148,8 +130,7 @@ def validate_and_clean() -> None:
                     tv_channel_games_table.c.id == game_id
                 )
             )
-            total_deleted += 1
-            continue
+            return True, True
 
         # Validate URL.
         site = row.site or ""
@@ -160,6 +141,7 @@ def validate_and_clean() -> None:
                 .where(tv_channel_games_table.c.id == game_id)
                 .values(url_valid=False)
             )
+            malformed_url_counter["count"] += 1
         else:
             session.execute(
                 update(tv_channel_games_table)
@@ -183,16 +165,55 @@ def validate_and_clean() -> None:
                 validation_errors="",
             )
         )
-        total_updated += 1
+        return True, False
 
-        # Log progress every PAUSE_AFTER rows (or adjust as needed).
+    except Exception as e:
+        logger.error(f"Error processing game {game_id}: {e}")
+        session.rollback()
+        return False, False
+
+
+def validate_and_clean() -> None:
+    """
+    Validate and clean rows in tv_channel_games that have not been updated.
+    Logs progress and final statistics.
+    """
+    rows = session.execute(
+        select(tv_channel_games_table).where(tv_channel_games_table.c.updated == False)
+    ).fetchall()
+    total_rows = len(rows)
+    logger.info(f"Starting validation on {total_rows} rows from tv_channel_games.")
+
+    total_deleted = 0
+    total_updated = 0
+    malformed_urls = 0
+    malformed_url_counter = {"count": 0}
+
+    start_time = time.time()
+    last_summary_time = start_time
+
+    for row in rows:
+        try:
+            processed, was_deleted = process_row(row, malformed_url_counter)
+            if processed:
+                if was_deleted:
+                    total_deleted += 1
+                else:
+                    total_updated += 1
+        except Exception as e:
+            logger.error(f"Unexpected error processing row {row.id}: {e}")
+            continue
+
+        # Log progress every 30 rows
         if (total_deleted + total_updated) % 30 == 0:
             logger.info(f"Processed {total_deleted + total_updated}/{total_rows} rows.")
         time.sleep(THROTTLE_DELAY)
 
     session.commit()
+    malformed_urls = malformed_url_counter["count"]
     logger.info(
-        f"Validation complete. Total updated: {total_updated}, Total deleted: {total_deleted}"
+        f"Validation complete. Total updated: {total_updated}, Total deleted: {total_deleted}, "
+        f"Malformed URLs: {malformed_urls}"
     )
 
 
