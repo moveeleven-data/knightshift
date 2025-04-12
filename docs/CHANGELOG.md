@@ -46,6 +46,13 @@ Confirmed clean docker compose build and up execution from scratch, with schema 
 Extended changelog.md and progress log to reflect today’s milestones.
 
 
+Validation Column Overhaul:
+
+Renamed updated column to is_validated for semantic clarity.
+
+Dropped redundant is_valid field from schema and scripts after audit confirmed is_validated fully captures validation state.
+
+
 ---------------------------------
 
 🗓 April 1, 2025

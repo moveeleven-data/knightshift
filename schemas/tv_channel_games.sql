@@ -19,17 +19,13 @@ CREATE TABLE IF NOT EXISTS tv_channel_games (
     eco VARCHAR,
     termination VARCHAR,
     moves TEXT,
-    updated BOOLEAN DEFAULT false,
-    url_valid BOOLEAN,
+    is_validated BOOLEAN DEFAULT false,
     opening TEXT,
-    profile_updated BOOLEAN DEFAULT false,
-    is_valid BOOLEAN DEFAULT true,
-    validation_errors TEXT,
-    raw_pgn JSONB
+    profile_updated BOOLEAN DEFAULT false
     ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 );
 
 -- Indexes
-CREATE INDEX IF NOT EXISTS idx_updated ON tv_channel_games(updated);
+CREATE INDEX IF NOT EXISTS idx_is_validated ON tv_channel_games(is_validated);
 CREATE INDEX IF NOT EXISTS idx_white ON tv_channel_games(white);
 CREATE INDEX IF NOT EXISTS idx_black ON tv_channel_games(black);
