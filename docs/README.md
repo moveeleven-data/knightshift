@@ -40,6 +40,7 @@ knightshift/
 ├── docs/
 │   ├── CHANGELOG.md
 │   ├── README.md
+│   ├── data_dictionary.md
 │   └── schema_reference.md
 ├── src/
 │   ├── db/   
