@@ -83,6 +83,7 @@ TIME_PER_USER = 0.5  # seconds between each user request
 BATCH_SIZE = 3000  # how many users to process before a long pause
 BATCH_PAUSE = 15 * 60  # pause duration after hitting batch size (in seconds)
 PROGRESS_INTERVAL = 30  # seconds between progress log updates
+TIME_LIMIT = 3  # in seconds (to avoid rate limiting)
 
 # -------------------------------------------------------------------
 # Table Definitions
@@ -293,7 +294,9 @@ def process_usernames(users: set[str]) -> None:
     """
     Iterate over each username, update or insert user data,
     throttle requests, log progress, and handle batch pauses.
+    Terminates early if TIME_LIMIT seconds are exceeded.
     """
+    start_time = time.time()  # <-- track when we start
     total_users = len(users)
     logger.info(f"Found {total_users} unique usernames requiring enrichment.")
     logger.info(
@@ -301,10 +304,18 @@ def process_usernames(users: set[str]) -> None:
         + estimate_processing_time(total_users, TIME_PER_USER)
     )
 
-    last_report_time = time.time()
+    last_report_time = start_time
     processed_count = 0
 
     for username in users:
+        # 🕒 Check if we've passed the time limit
+        elapsed = time.time() - start_time
+        if elapsed >= TIME_LIMIT:
+            logger.warning(
+                f"Time limit of {TIME_LIMIT} seconds reached. Stopping early after {processed_count} user(s)."
+            )
+            break
+
         # Attempt to update/insert user
         success = update_or_insert_user(username)
         if success:
@@ -328,7 +339,7 @@ def process_usernames(users: set[str]) -> None:
             )
             time.sleep(BATCH_PAUSE)
 
-    logger.info(f"Completed. Processed {processed_count}/{total_users}.")
+    logger.info(f"Stopped after processing {processed_count} user(s).")
     logger.info("tv_channel_games rows updated where user profiles fetched.")
 
 

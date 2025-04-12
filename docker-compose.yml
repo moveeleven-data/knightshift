@@ -18,6 +18,8 @@ services:
     env_file: .env.docker
     depends_on:
       - db
+    volumes:
+      - ./logs:/app/logs  # <--- Mount local logs folder into container
 
 volumes:
   pg_data:

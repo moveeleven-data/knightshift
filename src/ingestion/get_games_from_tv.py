@@ -58,8 +58,8 @@ DATABASE_URL = get_database_url(creds)
 engine = create_engine(DATABASE_URL)
 metadata = MetaData()
 
-TIME_LIMIT = int(os.getenv("TIME_LIMIT", 60))
-SLEEP_INTERVAL = int(os.getenv("SLEEP_INTERVAL", 40))
+TIME_LIMIT = int(os.getenv("TIME_LIMIT", 30))
+SLEEP_INTERVAL = int(os.getenv("SLEEP_INTERVAL", 5))
 RATE_LIMIT_PAUSE = int(os.getenv("RATE_LIMIT_PAUSE", 900))
 MAX_GAMES = int(os.getenv("MAX_GAMES", 5000))
 
@@ -209,9 +209,8 @@ def run_tv_ingestion() -> None:
         added_games: list[str] = []
 
         for channel in channels:
+            logger.info(f"Fetching '{channel}' games...")
             fetch_ongoing_games(channel, updated_games, added_games)
-            if channel in {"rapid", "horde", "kingOfTheHill"}:
-                logger.info(f"Fetching '{channel}' games...")
 
         logger.info(
             f"Batch complete: {len(updated_games)} updated, {len(added_games)} added."

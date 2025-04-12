@@ -35,6 +35,8 @@ and upsert logic.
 ```
 knightshift/
 ├── logs/
+├── airflow/
+│   └── dags/
 ├── docs/
 │   ├── CHANGELOG.md
 │   ├── README.md
@@ -129,6 +131,34 @@ Expected secret format:
 
 The pipeline fetches Lichess games every 40 seconds for 5 hours, 
 processes them, and stores them in your Postgres database.
+
+---
+
+To run on Docker:
+
+Run dos2unix on run.sh to ensure it has Unix-style line endings. You can
+install it on your system if needed.
+
+If you're on Windows, run dos2unix using Git Bash or other terminal tools.
+If dos2unix is not installed, run the following command:
+
+bash
+Copy
+Edit
+dos2unix run.sh
+To build the Docker image (make sure you're in the project directory where the
+Dockerfile is):
+
+bash
+Copy
+Edit
+docker build -t knightshift-pipeline .
+Run the Docker container with logs:
+
+bash
+Copy
+Edit
+docker run -it --env-file .env.docker knightshift-pipeline
 
 ---
 

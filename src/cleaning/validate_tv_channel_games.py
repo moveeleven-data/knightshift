@@ -61,7 +61,7 @@ PAUSE_AFTER = int(
     os.getenv("PAUSE_AFTER", 2500)
 )  # Rows processed before pausing (if needed)
 PAUSE_DURATION = int(os.getenv("PAUSE_DURATION", 900))  # Pause duration in seconds
-THROTTLE_DELAY = 0.5  # Delay (in seconds) between processing rows
+THROTTLE_DELAY = 0  # Delay (in seconds) between processing rows
 
 # --- Define tv_channel_games Table Schema (autoload current schema) ---
 tv_channel_games_table = Table("tv_channel_games", metadata, autoload_with=engine)
