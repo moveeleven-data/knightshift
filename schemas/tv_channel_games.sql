@@ -21,8 +21,9 @@ CREATE TABLE IF NOT EXISTS tv_channel_games (
     moves TEXT,
     is_validated BOOLEAN DEFAULT false,
     opening TEXT,
-    profile_updated BOOLEAN DEFAULT false
+    profile_updated BOOLEAN DEFAULT false,
     ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    validation_notes TEXT
 );
 
 -- Indexes

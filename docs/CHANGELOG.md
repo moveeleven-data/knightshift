@@ -43,7 +43,11 @@ Removed obsolete local test databases and ensured schema initialization always r
 
 Confirmed clean docker compose build and up execution from scratch, with schema and logs persisting as expected.
 
-Extended changelog.md and progress log to reflect today’s milestones.
+Ensured rows with NULL `validation_notes` are reprocessed by resetting `is_validated` to false via SQL patch
+
+Verified deletion logic triggers on invalid `result` values.
+
+Added data_dictionary.md
 
 
 Validation Column Overhaul:
