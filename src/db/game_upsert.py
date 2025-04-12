@@ -48,6 +48,8 @@ def build_game_data(game: Dict[str, Any]) -> Dict[str, Any]:
         "eco": game.get("eco", ""),
         "termination": game.get("termination", ""),
         "moves": game.get("moves", ""),
+        "opening": game.get("opening", ""),
+        "ingested_at": datetime.utcnow(),
     }
 
 

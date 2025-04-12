@@ -24,6 +24,7 @@ from sqlalchemy import (
     Date,
     Time,
     MetaData,
+    DateTime,
 )
 from sqlalchemy.orm import sessionmaker
 
@@ -87,6 +88,8 @@ tv_channel_games_table = Table(
     Column("eco", String),
     Column("termination", String),
     Column("moves", String),
+    Column("opening", String),
+    Column("ingested_at", DateTime),
 )
 
 Session = sessionmaker(bind=engine)
@@ -115,6 +118,7 @@ def process_pgn_block(
     Collect IDs of updated vs. added games in provided lists.
     """
     game_dict = parse_pgn_lines(pgn_lines)
+    
     if "site" in game_dict:
         data_for_db = build_game_data(game_dict)
         was_updated = upsert_game(session, tv_channel_games_table, data_for_db)
@@ -133,7 +137,7 @@ def fetch_ongoing_games(
     Retries on non-429 errors, streams PGN data line by line.
     """
     url = f"https://lichess.org/api/tv/{channel}"
-    params = {"clocks": False, "opening": False}
+    params = {"clocks": False, "opening": True}
     for attempt in range(1, max_retries + 1):
         response = http_session.get(url, params=params, stream=True)
         if response.status_code == 429:
@@ -166,17 +170,22 @@ def parse_and_upsert_response(
     response, updated_games: list[str], added_games: list[str]
 ) -> None:
     """
-    Given a streaming response from Lichess TV,
-    parse PGN blocks and upsert them into the DB.
+    Parses PGN blocks and upserts them to DB.
+    A full game = header lines + 1 move line.
     """
-    pgn_lines = []
+    pgn_block = []
+
     for line in response.iter_lines():
-        if line.strip():
-            pgn_lines.append(line)
-        else:
-            if pgn_lines:  # blank line => complete PGN block
-                process_pgn_block(pgn_lines, updated_games, added_games)
-                pgn_lines = []
+        if not line:
+            continue
+
+        decoded = line.decode("utf-8").strip()
+        logger.debug(f"PGN LINE: {decoded}")
+        pgn_block.append(line)
+
+        if decoded.startswith("1. "):  # move line = end of current game block
+            process_pgn_block(pgn_block, updated_games, added_games)
+            pgn_block = []  # reset for next game
 
 
 def run_tv_ingestion() -> None:
