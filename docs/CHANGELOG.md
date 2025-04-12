@@ -4,6 +4,50 @@ A running log of major development milestones, current state, and future plans f
 
 ---------------------------------
 
+🗓 April 12, 2025
+
+Docker Compose Enhancements:
+
+Confirmed docker-compose.yml orchestration of both Postgres and pipeline services.
+
+Cleaned up Postgres volume with docker compose down -v to reset DB state.
+
+Ensured persistent volume pg_data stores initialized database across reboots.
+
+Corrected ports config for safe local exposure; retained 5432:5432 for host access during development.
+
+
+Schema Initialization & Documentation:
+
+Mounted schemas/ folder into Postgres using ./schemas:/docker-entrypoint-initdb.d to enable auto-initialization.
+
+Verified tv_channel_games.sql and lichess_users.sql are correctly executed during first-time container startup.
+
+Extended schema changelog to include initialization via raw SQL + Docker Compose integration.
+
+Added `ingested_at TIMESTAMP` column to `tv_channel_games` to track arrival time of each record.
+
+
+Logging & Debugging:
+
+Verified that logs/pipeline.log captures ingestion, cleaning, and enrichment steps.
+
+stdout and stderr now routed to terminal and log file for traceability.
+
+Checked that PGHOST overrides work correctly inside Docker, ensuring consistent connectivity.
+
+
+Project Hygiene & Clarity:
+
+Removed obsolete local test databases and ensured schema initialization always reflects version-controlled SQL.
+
+Confirmed clean docker compose build and up execution from scratch, with schema and logs persisting as expected.
+
+Extended changelog.md and progress log to reflect today’s milestones.
+
+
+---------------------------------
+
 🗓 April 1, 2025
 
 Pipeline Execution & Modularization:

@@ -1,4 +1,5 @@
 -- tv_channel_games.sql
+
 CREATE TABLE IF NOT EXISTS tv_channel_games (
     id VARCHAR PRIMARY KEY,
     event VARCHAR,
@@ -23,7 +24,12 @@ CREATE TABLE IF NOT EXISTS tv_channel_games (
     opening TEXT,
     profile_updated BOOLEAN DEFAULT false,
     is_valid BOOLEAN DEFAULT true,
-    validation_errors TEXT
+    validation_errors TEXT,
+    raw_pgn JSONB
+    ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 );
--- Indexes, e.g.:
+
+-- Indexes
 CREATE INDEX IF NOT EXISTS idx_updated ON tv_channel_games(updated);
+CREATE INDEX IF NOT EXISTS idx_white ON tv_channel_games(white);
+CREATE INDEX IF NOT EXISTS idx_black ON tv_channel_games(black);

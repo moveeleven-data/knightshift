@@ -4,6 +4,21 @@ Tracks structural changes to database tables (DDL) that impact table creation, e
 
 ---
 
+## 2025-04-12
+
+### Enabled auto-initialization of Postgres schema via Docker
+- Mounted raw SQL files from `schemas/` into Postgres container using Docker volume.
+- Files initialized:
+  - `lichess_users.sql`
+  - `tv_channel_games.sql`
+- Ensures tables and indexes are created automatically on first container startup.
+- Docker Compose volume: `./schemas:/docker-entrypoint-initdb.d`
+- Future migrations can follow similar raw SQL or tool-based workflows (e.g. Flyway or Alembic).
+- Added `ingested_at TIMESTAMP` column to `tv_channel_games` to track arrival time of each record.
+
+
+---
+
 ## 2025-03-25
 
 ### Created `lichess_users` table
