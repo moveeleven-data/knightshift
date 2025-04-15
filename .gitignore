@@ -1,3 +1,10 @@
+# folder_name/   	Ignores the entire folder and everything inside it
+# *.ext         	Ignores all files with a specific extension (e.g., *.log ignores all .log files)
+# filename.ext	    Ignores a specific file by name
+# !filename.ext	    Negates a rule – keeps a specific file even if a broader rule ignores it
+# **/filename.ext	Ignores that file anywhere in the project, at any depth
+# folder/file.ext	Ignores a specific file only in a specific folder
+
 # Logs
 logs/*
 !logs/.gitkeep

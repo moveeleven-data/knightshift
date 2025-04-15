@@ -76,15 +76,6 @@ http_session.headers.update(
     }
 )
 
-http_session.headers.update(
-    {
-        "Authorization": f"Bearer {get_lichess_token()}",
-        "Content-Type": "application/x-www-form-urlencoded",
-    }
-)
-print("TOKEN USED:", get_lichess_token())
-
-
 # -------------------------------------------------------------------
 # Constants / Config
 # -------------------------------------------------------------------
