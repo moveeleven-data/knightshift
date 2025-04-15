@@ -36,7 +36,7 @@ from utils.db_utils import load_db_credentials, get_database_url
 from utils.logging_utils import setup_logger
 
 logger = setup_logger("validate_tv_channel_games")
-load_dotenv(Path(__file__).resolve().parent / ".env.local")
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / "config" / ".env.local")
 
 # --- DB Setup ---
 creds = load_db_credentials()

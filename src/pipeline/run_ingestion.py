@@ -5,8 +5,13 @@ run_ingestion.py
 Entry point for game ingestion. Imports and runs run_tv_ingestion from get_games_from_tv.py.
 """
 
+import os
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load env vars from .env.local
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / "config" / ".env.local")
 
 # --- Add project root (knightshift/) to sys.path ---
 CURRENT_FILE = Path(__file__).resolve()

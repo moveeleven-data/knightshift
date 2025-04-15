@@ -6,6 +6,42 @@ A running log of major development milestones, current state, and future plans f
 
 🗓 April 12, 2025
 
+Fully Containerized Storage:
+
+Replaced local PostgreSQL with a Dockerized Postgres container for all ingestion, cleaning, and enrichment steps.
+
+All pipeline scripts now correctly read credentials from AWS Secrets Manager and respect environment flags to switch between local and container contexts.
+
+
+Script + Env Overhaul:
+
+Updated .env.local to point to 127.0.0.1:55432 for local scripts (connecting to Dockerized DB).
+
+Updated .env.docker to use PGHOST=db for Docker-to-Docker internal communication.
+
+Confirmed secrets LichessDBCreds_Docker and LichessDBCreds are being correctly used depending on context.
+
+
+Verified End-to-End Functionality:
+
+Local scripts connect to Dockerized DB as expected (RUNNING_IN_DOCKER=false).
+
+Full pipeline runs inside Docker using container-internal networking (RUNNING_IN_DOCKER=true).
+
+Game ingestion, validation, and enrichment confirmed writing to the correct database (inside container).
+
+
+Current Status: 
+
+-PostgreSQL fully containerized via docker-compose
+-Local scripts target Docker DB via port 55432
+-Docker container targets DB via internal hostname db
+-Both .env.local and .env.docker are correctly configured
+-AWS Secrets Manager loads DB credentials successfully
+-Game ingestion + enrichment write into the correct containerized DB
+-Local system Postgres can now be safely disabled (optional cleanup)
+
+
 Docker Compose Enhancements:
 
 Confirmed docker-compose.yml orchestration of both Postgres and pipeline services.
@@ -48,6 +84,8 @@ Ensured rows with NULL `validation_notes` are reprocessed by resetting `is_valid
 Verified deletion logic triggers on invalid `result` values.
 
 Added data_dictionary.md
+
+Added backups folder
 
 
 Validation Column Overhaul:
@@ -289,40 +327,3 @@ Get Games from Users: Fetches historical PGN data for specific Lichess user IDs 
 Get Games from TV: Continuously streams games from all Lichess TV channels (e.g., blitz, rapid, horde) and inserts records into the tv_channel_games table. Each row includes metadata such as player names, ELO ratings, time controls, results, and PGN move text.
 
 Update All Games: Enriches previously ingested records. Uses a Boolean updated column to selectively update stale or partial rows, optimizing for performance via indexed queries.
-
----------------------------------
-
-Near-Term Plans (Q2 2025)
-
-Redirect standard output to a persistent log file (e.g., pipeline.log) via run.sh.
-
-Dockerize the entire application (handling .env, credentials, and PostgreSQL integration).
-
-Set up local automation via cron (Linux/WSL) or Task Scheduler (Windows).
-
-
-Mid-Term Goals (Spring 2025)
-
-Validate ingested game records with basic data quality checks (e.g., ELO ranges, valid PGN structure).
-
-Investigate and resolve the source of invalid game IDs.
-
-Partition tv_channel_games table by ingestion date for scalability.
-
-Add monitoring utilities to surface ingestion stats and error rates.
-
-
-Long-Term Vision (Summer 2025)
-
-Stage raw data in AWS S3 and archive invalid records.
-
-Deploy containerized ingestion pipeline to AWS (ECS or EC2).
-
-Integrate external sources (e.g., FIDE ratings, Kaggle archives).
-
-Expand analytics layer: Redshift, dashboards via QuickSight or Metabase.
-
-Fix Get Games from Users: Investigate and resolve the current issues with
-fetching PGN data for specific Lichess user IDs, ensuring
-functionality for future data ingestion.
-

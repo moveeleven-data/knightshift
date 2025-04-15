@@ -7,6 +7,10 @@ Entry point for user profile enrichment. Runs backfill_user_profiles.main.
 
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load env vars from .env.local
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / "config" / ".env.local")
 
 # Add project root (knightshift/) to sys.path
 CURRENT_FILE = Path(__file__).resolve()

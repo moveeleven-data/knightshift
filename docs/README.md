@@ -35,12 +35,14 @@ and upsert logic.
 ```
 knightshift/
 ├── logs/
+├── backups/
 ├── airflow/
 │   └── dags/
 ├── docs/
 │   ├── CHANGELOG.md
 │   ├── README.md
 │   ├── data_dictionary.md
+│   ├── knightshift_overview.md
 │   └── schema_reference.md
 ├── src/
 │   ├── db/   

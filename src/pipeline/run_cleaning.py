@@ -7,6 +7,10 @@ Entry point for game record cleaning. Runs sanitize_game_records.validate_and_cl
 
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load env vars from .env.local
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / "config" / ".env.local")
 
 # Add project root (knightshift/) to sys.path
 CURRENT_FILE = Path(__file__).resolve()

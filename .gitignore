@@ -147,6 +147,8 @@ env.bak/
 venv.bak/
 .env.local
 .env.docker
+**/.env.docker
+**/.env.local
 
 # Spyder project settings
 .spyderproject

@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS lichess_users (
     rapid_rating INTEGER,
     chess960_rating INTEGER,
     ultra_bullet_rating INTEGER,
-    country_code VARCHAR(5),
+    country_code VARCHAR(20),
     created_at BIGINT,
     seen_at BIGINT,
     playtime_total INTEGER,

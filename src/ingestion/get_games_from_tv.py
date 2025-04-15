@@ -51,8 +51,10 @@ logger = setup_logger(name="get_games_from_tv", level=logging.INFO)
 # -------------------------------------------------------------------
 # Environment & Configuration
 # -------------------------------------------------------------------
-load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env.local")
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / "config" / ".env.local")
 creds = load_db_credentials()
+print("Loaded PGHOST =", os.getenv("PGHOST"))
+print("RUNNING_IN_DOCKER =", os.getenv("RUNNING_IN_DOCKER"))
 logger.info("Loaded DB credentials successfully.")
 
 DATABASE_URL = get_database_url(creds)

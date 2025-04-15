@@ -56,7 +56,7 @@ from src.utils.logging_utils import setup_logger
 # -------------------------------------------------------------------
 # Environment and Database Setup
 # -------------------------------------------------------------------
-load_dotenv(PROJECT_ROOT / "config" / ".env.local")  # Adjust if your .env path differs
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / "config" / ".env.local")
 
 logger = setup_logger(name="backfill_user_profiles", level=logging.INFO)
 
@@ -75,6 +75,15 @@ http_session.headers.update(
         "Content-Type": "application/x-www-form-urlencoded",
     }
 )
+
+http_session.headers.update(
+    {
+        "Authorization": f"Bearer {get_lichess_token()}",
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
+)
+print("TOKEN USED:", get_lichess_token())
+
 
 # -------------------------------------------------------------------
 # Constants / Config
