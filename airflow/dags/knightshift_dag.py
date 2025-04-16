@@ -21,7 +21,7 @@ with DAG(
     dag_id="knightshift_pipeline",
     default_args=default_args,
     description="Ingests, cleans, and enriches Lichess data",
-    schedule_interval=None,  # Manual trigger for now
+    schedule_interval='0 */2 * * *',
     start_date=datetime(2025, 4, 16),
     catchup=False,
     tags=["knightshift", "chess"],

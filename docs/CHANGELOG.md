@@ -6,11 +6,13 @@ A running log of major development milestones, current state, and future plans f
 
 🗓 April 16, 2025
 
-Airflow orchestration:
+April 16, 2025 – Full Airflow Integration & Debugging Pipeline
 
-Created knightshift_dag.py
+Today, we successfully transitioned the KnightShift pipeline to run entirely through Apache Airflow using Docker Compose. This marked a major milestone in maturing the project into a production-grade orchestration system. We containerized the ingestion, cleaning, and enrichment scripts, built custom Docker images for both the pipeline and Airflow, and configured the Airflow scheduler and webserver to manage task execution and DAG visibility. After launching Airflow at localhost:8080, we triggered the knightshift_pipeline DAG, verified each task (ingestion → cleaning → enrichment) succeeded, and confirmed that data flowed end-to-end into the tv_channel_games and lichess_users tables within a containerized PostgreSQL instance.
 
-Added logs and plugins folder to airflow directory.
+Throughout the process, we encountered and resolved a range of critical issues. The pipeline container was unable to detect Postgres readiness due to misconfigured networking (PGHOST=localhost instead of PGHOST=db). We resolved AWS credential errors and SQLAlchemy connection failures by forwarding environment variables through docker-compose.yml, ensuring every container had access to the necessary keys, secrets, and database config. We also faced Python 3.8 compatibility issues, such as set[str] type annotations, which were fixed by reverting to the older Set[str] syntax. Crucially, we learned to debug from inside the containers—running docker compose exec airflow bash and executing failing Python scripts manually—so we could iterate quickly and view full tracebacks without rebuilding images. This technique proved invaluable and should be part of any Docker-based debugging workflow.
+
+One persistent pain point was managing environment variables across local dev, Docker Compose, and Airflow. While storing secrets and credentials in a .env.local file improves maintainability and security, juggling environment values across multiple execution contexts introduced brittleness and confusion. Scripts occasionally failed due to incorrect assumptions about the runtime environment. The broader takeaway is that multi-environment setups require disciplined separation of environment-specific config and runtime logic. In the future, we may introduce centralized configuration utilities, or shift to secrets managers or .env auto-detection logic to better isolate dev from prod. For now, standardizing execution through Airflow avoids these pitfalls, ensures consistent behavior, and lets us focus on stability and scaling instead of debugging broken dev workflows.
 
 ---------------------------------
 
