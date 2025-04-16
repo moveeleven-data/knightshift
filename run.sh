@@ -1,12 +1,12 @@
+#!/bin/bash          # "shebang" - tells os to run this script using Bash
+
 # ----------------------------------------------------------------------
-# This script is the entrypoint for the pipeline container.
+# This is the entrypoint for the pipeline container.
 # It's called automatically when the container starts.
 #
 # - Waits for Postgres to become ready
 # - Then runs main.py (which runs ingestion → cleaning → enrichment)
 # ----------------------------------------------------------------------
-
-#!/bin/bash          # tells os to run this script using Bash
 
 echo "RUN.SH started"
 which python      

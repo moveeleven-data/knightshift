@@ -1,4 +1,4 @@
-# ♞ KnightShift: Lichess Data Pipeline
+# KnightShift: Lichess Data Pipeline
 
 KnightShift is a production-style chess data pipeline that ingests real-time
 Lichess TV games, parses PGN data, and stores structured game records in a
@@ -10,7 +10,7 @@ and upsert logic.
 
 ---
 
-## 🧠 What It Does
+## What It Does
 
 - Streams live chess games from multiple Lichess TV channels (e.g. blitz, rapid, horde).
 - Parses PGN-formatted chess data into structured records.
@@ -20,7 +20,7 @@ and upsert logic.
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - **Python 3.10+**
 - **PostgreSQL**
@@ -30,7 +30,7 @@ and upsert logic.
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 knightshift/
@@ -98,7 +98,7 @@ knightshift/
 
 ---
 
-## 🔐 Secrets Management
+## Secrets Management
 
 Credentials are securely pulled from AWS Secrets Manager.
 
@@ -116,7 +116,7 @@ Expected secret format:
 
 ---
 
-## ▶️ How to Run
+## How to Run
 
 1. Create a Postgres database and store credentials in AWS Secrets Manager.
 
@@ -165,17 +165,17 @@ docker run -it --env-file .env.docker knightshift-pipeline
 
 ---
 
-## 🚧 Future Expansion: Chess Analytics Pipeline (Multi-Source)
+## Future Expansion: Chess Analytics Pipeline (Multi-Source)
 
 This project will evolve into a full **Chess Analytics Pipeline** with:
 
-### ✈️ Multiple Data Sources
+### Multiple Data Sources
 
 - **Lichess (Real-Time):** PGN from TV stream and export API
 - **Kaggle Archive:** Millions of historical games
 - **FIDE Ratings:** Public CSVs with official player data
 
-### ⚙️ Architecture Components
+### Architecture Components
 
 - **Staging in RDS (PostgreSQL)**
 - **Raw Data in S3 Buckets**
@@ -184,7 +184,7 @@ This project will evolve into a full **Chess Analytics Pipeline** with:
 - **Analytics Layer in Redshift or a second Postgres**
 - **Dashboards with AWS QuickSight**
 
-### 🏗 Planned Expansion by Month
+### Planned Expansion by Month
 
 **Month 1:**
 
@@ -221,7 +221,7 @@ This project will evolve into a full **Chess Analytics Pipeline** with:
 
 ---
 
-## 📌 Final Goal
+## Final Goal
 
 Build a robust, multi-source chess data pipeline capable of:
 
@@ -234,7 +234,7 @@ Build a robust, multi-source chess data pipeline capable of:
 
 ---
 
-## 📅 Built By
+## Built By
 
 [Matthew Tripodi](https://github.com/okv627)
 

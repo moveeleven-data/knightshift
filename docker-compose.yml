@@ -1,17 +1,11 @@
 # ----------------------------------------------------------------------
-# This file tells Docker how to run multiple containers together:
-# Postgres + KnightShift pipeline
+#  This file tells Docker how to run multiple containers together:
+#  Postgres + KnightShift pipeline
 #
-# What It Does:
-# - Builds pipeline image from Dockerfile
-# - Spins up Postgres using the official image
-# - Connects them on a shared private network
-# - Mounts volumes for logs and schema setup
-# - Maps local port 55432 to container port 5432 for DB access
-#
-# Run it with:
-#   docker compose up --build
+#  Run it with:
+#  docker compose up --build
 # ----------------------------------------------------------------------
+
 services:               # define the services (containers) to be run
   db:
     image: postgres:17 
@@ -22,6 +16,7 @@ services:               # define the services (containers) to be run
       POSTGRES_DB: knightshift
     ports:
       - "127.0.0.1:55432:5432"
+
     # This maps port 5432 inside Postgres container (default Postgres port) to
     # port 55432 on local machine, avoiding conflicts with local Postgres
 
