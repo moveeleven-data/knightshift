@@ -44,6 +44,14 @@ knightshift/
 │   ├── data_dictionary.md
 │   ├── knightshift_overview.md
 │   └── schema_reference.md
+├── explorations/
+│   ├── vector_embeddings/        # Vector DBs (Pinecone, FAISS) – Similarity search
+│   ├── graph_queries/            # Graph DBs (Neo4j, Gremlin) – Relationship modeling
+│   ├── document_storage/         # Document DBs (MongoDB, Couchbase) – Semi-structured JSON
+│   ├── timeseries/               # Time-Series DBs (InfluxDB, TimescaleDB) – Game frequency, ELO over time
+│   ├── columnar_vs_row/          # OLAP vs OLTP, analytics workloads
+│   ├── key_value_store/          # Redis, DynamoDB-style storage
+│   └── README.md
 ├── src/
 │   ├── db/   
 │   ├── README.md
