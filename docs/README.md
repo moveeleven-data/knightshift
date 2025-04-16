@@ -36,12 +36,21 @@ and upsert logic.
 knightshift/
 ├── logs/
 ├── backups/
+├── docs/
 ├── airflow/
-│   └── dags/
+│   ├── logs/
+│   ├── plugins/
+│   ├── dags/
+│   │   └── knightshift_dag.py
 ├── docs/
 │   ├── CHANGELOG.md
 │   ├── README.md
+│   ├── failures.md
+│   ├── tech_stack.md
+│   ├── assumptions.md
 │   ├── data_dictionary.md
+│   ├── lifecycle_diagram.md
+│   ├── data_architecture.md
 │   ├── knightshift_overview.md
 │   └── schema_reference.md
 ├── explorations/
@@ -96,11 +105,15 @@ knightshift/
 │   ├── CHANGELOG.md
 │   ├── lichess_users.sql
 │   └── tv_channel_games.sql
+├── .env                 # Renamed .env.docker to .env
+├── .gitignore
 ├── Dockerfile
+├── Dockerfile.airflow
 ├── docker-compose.yml
 ├── requirements.txt
 ├── pytest.ini
 ├── run_knightshift.bat
+├── strip_comments.py    # Strips comments from all files and save clean versions
 └── run.sh
 ```
 

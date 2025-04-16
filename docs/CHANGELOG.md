@@ -4,6 +4,16 @@ A running log of major development milestones, current state, and future plans f
 
 ---------------------------------
 
+🗓 April 16, 2025
+
+Airflow orchestration:
+
+Created knightshift_dag.py
+
+Added logs and plugins folder to airflow directory.
+
+---------------------------------
+
 🗓 April 12, 2025
 
 Fully Containerized Storage:

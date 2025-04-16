@@ -1,0 +1,10 @@
+FROM apache/airflow:2.8.1-python3.10
+
+# Set working directory
+WORKDIR /opt/airflow
+
+# Copy your pipeline’s requirements into the container
+COPY requirements.txt requirements.txt
+
+# Install your custom dependencies (like pg8000)
+RUN pip install --no-cache-dir -r requirements.txt

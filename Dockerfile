@@ -9,6 +9,9 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
+# Install bash
+RUN apt-get update && apt-get install -y bash
+
 # Install Postgres client tools
 RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
 
@@ -21,6 +24,9 @@ COPY run.sh .
 
 # Make run.sh executable
 RUN chmod +x run.sh
+
+# Writable log directory for Airflow-based usage
+RUN mkdir -p /opt/airflow/logs/pipeline_logs && chmod -R 777 /opt/airflow/logs/pipeline_logs
 
 # Run the pipeline
 ENTRYPOINT ["./run.sh"]

@@ -24,10 +24,9 @@ def load_db_credentials(
 
     creds = json.loads(response["SecretString"])
 
-    # Optionally override inside Docker
-    if creds["PGHOST"] == "host.docker.internal" and os.getenv("RUNNING_IN_DOCKER"):
-        print("Inside Docker, overriding PGHOST to IP")
-        creds["PGHOST"] = "192.168.65.254"
+    if os.getenv("RUNNING_IN_DOCKER") == "true":
+        print("Inside Docker, overriding PGHOST to 'db'")
+        creds["PGHOST"] = "db"  # ← this must match the docker-compose service name
 
     return creds
 

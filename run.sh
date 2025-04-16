@@ -1,4 +1,4 @@
-#!/bin/bash          # "shebang" - tells os to run this script using Bash
+#!/bin/bash
 
 # ----------------------------------------------------------------------
 # This is the entrypoint for the pipeline container.
@@ -6,6 +6,7 @@
 #
 # - Waits for Postgres to become ready
 # - Then runs main.py (which runs ingestion → cleaning → enrichment)
+# - Then keeps the container alive for debugging
 # ----------------------------------------------------------------------
 
 echo "RUN.SH started"
@@ -23,3 +24,6 @@ done
 echo "Postgres is up - running main.py"
 python src/main.py
 echo "Done"
+
+# Keep container alive for manual exec/debug
+sleep infinity

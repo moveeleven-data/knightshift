@@ -12,6 +12,7 @@ import os
 import time
 from pathlib import Path
 from datetime import datetime
+from typing import List
 
 import requests
 from dotenv import load_dotenv
@@ -113,14 +114,14 @@ http_session.headers.update(
 # Core Ingestion Functions
 # -------------------------------------------------------------------
 def process_pgn_block(
-    pgn_lines: list[bytes], updated_games: list[str], added_games: list[str]
+    pgn_lines: List[bytes], updated_games: List[str], added_games: List[str]
 ) -> None:
     """
     Parse a block of PGN lines, build the game data, and upsert into DB.
     Collect IDs of updated vs. added games in provided lists.
     """
     game_dict = parse_pgn_lines(pgn_lines)
-    
+
     if "site" in game_dict:
         data_for_db = build_game_data(game_dict)
         was_updated = upsert_game(session, tv_channel_games_table, data_for_db)
@@ -132,7 +133,7 @@ def process_pgn_block(
 
 
 def fetch_ongoing_games(
-    channel: str, updated_games: list[str], added_games: list[str], max_retries: int = 3
+    channel: str, updated_games: List[str], added_games: List[str], max_retries: int = 3
 ) -> None:
     """
     Fetch ongoing games from the Lichess TV API for a specific channel and upsert them.
@@ -169,7 +170,7 @@ def fetch_ongoing_games(
 
 
 def parse_and_upsert_response(
-    response, updated_games: list[str], added_games: list[str]
+    response, updated_games: List[str], added_games: List[str]
 ) -> None:
     """
     Parses PGN blocks and upserts them to DB.
@@ -216,8 +217,8 @@ def run_tv_ingestion() -> None:
     total_games_count = 0
 
     while time.time() - start_time < TIME_LIMIT:
-        updated_games: list[str] = []
-        added_games: list[str] = []
+        updated_games: List[str] = []
+        added_games: List[str] = []
 
         for channel in channels:
             logger.info(f"Fetching '{channel}' games...")
