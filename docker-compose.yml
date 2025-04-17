@@ -48,9 +48,10 @@ services:
       context: .
       dockerfile: Dockerfile.airflow
     restart: always
-    depends_on: [db]
+    depends_on:
+      - db
     environment:
-      <<: *common_env             # inherit DB / AWS creds
+      <<: *common_env
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:postgres@db:5432/knightshift
       AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY}
@@ -61,17 +62,28 @@ services:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
-      - ./src:/app/src              # source code for live reload
-      - ./config:/app/config        # env + config bundle
+      - ./src:/app/src
+      - ./config:/app/config
     ports:
       - "8080:8080"
+    # ← Replace your old `command:` here with this:
     command: >
       bash -c "
-        airflow db init &&
-        airflow users create --username admin --password admin
-                            --firstname admin --lastname admin
-                            --role Admin --email admin@example.com &&
-        airflow webserver & airflow scheduler
+        # migrate the metadata DB
+        airflow db upgrade &&
+        # create the admin user if not exists (|| true so it won’t fail if already there)
+        airflow users create \
+          --username admin \
+          --password admin \
+          --firstname admin \
+          --lastname admin \
+          --role Admin \
+          --email admin@example.com \
+          --use-random-password=false || true &&
+        # start the scheduler in the background
+        airflow scheduler & 
+        # exec the webserver on 0.0.0.0:8080
+        exec airflow webserver --host 0.0.0.0 --port 8080
       "
 
 # ─────────────────────────────────────────────────────────────
