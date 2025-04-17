@@ -61,7 +61,7 @@ services:               # define the services (containers) to be run
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:postgres@db:5432/knightshift
-      - AIRFLOW__CORE__FERNET_KEY=ZVBRKuzKaNALF_NdZk4RcuKDNh1nevygtaeV0vKxaQI=
+      - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY}
       - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=True
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - RUNNING_IN_DOCKER=true
