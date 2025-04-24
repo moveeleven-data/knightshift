@@ -64,7 +64,11 @@ def main():
 
     for path in SOURCE_DIR.rglob("*"):
         # Skip folders and the output directory itself
-        if not path.is_file() or DEST_DIR in path.parents:
+        try:
+            if not path.is_file() or DEST_DIR in path.parents:
+                continue
+        except OSError:
+            print(f"Skipping inaccessible file: {path}")
             continue
 
         # Filter by extension

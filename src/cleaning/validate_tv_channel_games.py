@@ -143,7 +143,7 @@ def _process_row(session: Session, row) -> Tuple[bool, bool]:
     return True, False  # processed, not deleted
 
 
-def _validate_all() -> None:
+def validate_and_clean() -> None:
     session = SessionLocal()
     rows = session.execute(
         select(TV_GAMES).where(TV_GAMES.c.is_validated.is_(False))
@@ -176,4 +176,4 @@ def _validate_all() -> None:
 # Entrypoint
 # ═════════════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
-    _validate_all()
+    validate_and_clean()
