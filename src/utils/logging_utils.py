@@ -14,7 +14,6 @@ Features
 from __future__ import annotations
 
 import logging
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -57,7 +56,7 @@ def _init_file_handler(
         return fh
     except PermissionError:
         # Failsafe: still emit a warning on the root logger
-        logging.getLogger().warning("⚠️  Cannot write logs to %s", logs_dir)
+        logging.getLogger().warning("Cannot write logs to %s", logs_dir)
         return None
 
 
