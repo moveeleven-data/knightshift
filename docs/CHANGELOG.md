@@ -2,9 +2,16 @@
 
 A running log of major development milestones, current state, and future plans for the KnightShift data pipeline.
 
+---------------------------------             
+                          
+April 25, 2025
+
+Refactored environment variable management to unify all configuration into a single .env file at the project root. Removed redundant config/.env.local and updated db_utils.py to prioritize container-level variables, ensuring clean separation between secrets and application code. Cleaned and reorganized .gitignore to exclude project-specific folders (annotations/, sudo/) and sensitive files, improving project security and maintainability. Successfully verified clean DAG execution after migration.
+
 ---------------------------------
 
 April 16, 2025 – Airflow Integration Complete
+
 We successfully transitioned the KnightShift pipeline to run fully through Apache Airflow using Docker Compose. All scripts—ingestion, cleaning, enrichment—now run as Airflow tasks, and the web UI confirms their success. Major hurdles included incorrect Docker networking (PGHOST was set to localhost instead of db), environment variable confusion, and Python version mismatches (e.g., using set[str] in Python 3.8). Debugging inside containers and streamlining the environment config made the difference. The pipeline now runs reliably under Airflow, which gives us a production-style orchestration backbone moving forward.
 
 April 12, 2025 – Fully Containerized Storage & Environment Stability

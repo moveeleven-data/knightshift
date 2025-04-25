@@ -91,9 +91,6 @@ knightshift/
 │   │   └── get_games_from_users.py
 │   ├── __init__.py
 │   └── main.py
-├── config/
-│   └── .env.local
-│   └── .env.docker
 ├── tests/
 │   ├── README.md
 │   ├── test_pgn_parser.py

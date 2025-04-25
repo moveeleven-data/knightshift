@@ -21,9 +21,11 @@ from typing import Dict, Any, Optional
 import boto3
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
+from pathlib import Path
 
 # Load .env.* as early as possible so every import sees the variables
-load_dotenv()
+ROOT_ENV = Path(__file__).resolve().parents[2] / ".env"  # …/knightshift/.env
+load_dotenv(dotenv_path=ROOT_ENV, override=False)  # env wins over file
 
 # ──────────────────────────────────────────────────────────────────────
 # Constants
