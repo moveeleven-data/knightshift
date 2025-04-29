@@ -36,6 +36,8 @@ and upsert logic.
 knightshift/
 ├── logs/
 ├── backups/
+├── config/
+│   └── .env.template
 ├── docs/
 ├── airflow/
 │   ├── logs/
@@ -118,7 +120,7 @@ knightshift/
 
 ## Secrets Management
 
-Credentials are securely pulled from AWS Secrets Manager.
+The KnightShift pipeline securely pulls database credentials from **AWS Secrets Manager** or a local **`.env`** file, depending on the environment.
 
 Expected secret format:
 
@@ -131,6 +133,14 @@ Expected secret format:
   "PGPASSWORD": "your-password"
 }
 ```
+
+Expected .env file (local development)**
+
+A sample template is provided at `config/.env.template`.
+
+# create your personal copy in the project root
+cp config/.env.template .env
+# then edit .env and add your real credentials / API keys
 
 ---
 
@@ -155,31 +165,33 @@ processes them, and stores them in your Postgres database.
 
 ---
 
-To run on Docker:
+## How to Run with Docker Compose (Airflow + Pipeline)
 
-Run dos2unix on run.sh to ensure it has Unix-style line endings. You can
-install it on your system if needed.
+KnightShift now runs via Docker Compose, orchestrating Postgres, Airflow, and the ingestion worker together.
 
-If you're on Windows, run dos2unix using Git Bash or other terminal tools.
-If dos2unix is not installed, run the following command:
+### Steps
 
-bash
-Copy
-Edit
+1. Ensure `.env` exists in the project root (copied from the template).
+
+2. (Windows only) Fix line endings in `run.sh`:
+
 dos2unix run.sh
-To build the Docker image (make sure you're in the project directory where the
-Dockerfile is):
 
-bash
-Copy
-Edit
-docker build -t knightshift-pipeline .
-Run the Docker container with logs:
+Build and start all services:
 
-bash
-Copy
-Edit
-docker run -it --env-file .env.docker knightshift-pipeline
+docker compose up --build
+
+This will automatically:
+- Spin up a local Postgres container
+- Launch Airflow (Scheduler, Webserver, Worker)
+- Register and schedule the KnightShift ingestion DAG
+- Begin streaming games and writing them to Postgres
+
+Access Airflow UI
+Open your browser and go to:
+http://localhost:8080
+Username: admin
+Password: admin
 
 ---
 

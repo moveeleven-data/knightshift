@@ -16,16 +16,24 @@ Execution flow
 4. Repeat until the configurable `TIME_LIMIT` or `MAX_GAMES` is reached.
 """
 
+# ────────────────────────────────────────────────────────────────────────────────
+# Future imports
+# ────────────────────────────────────────────────────────────────────────────────
 from __future__ import annotations
 
+# ────────────────────────────────────────────────────────────────────────────────
+# Standard library imports
+# ────────────────────────────────────────────────────────────────────────────────
 import logging
 import os
 import sys
 import time
-from datetime import datetime
 from pathlib import Path
 from typing import Final, List, Sequence
 
+# ────────────────────────────────────────────────────────────────────────────────
+# Third-party imports
+# ────────────────────────────────────────────────────────────────────────────────
 import requests
 from dotenv import load_dotenv
 from sqlalchemy import (
@@ -41,9 +49,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Session, sessionmaker
 
-# ──────────────────────────────────────────────────────────────────────────
-#   Local imports (after adding project root to PYTHONPATH)
-# ──────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────────
+# Local project imports (KnightShift-specific modules)
+# ────────────────────────────────────────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))  # idempotent
 
@@ -55,7 +63,7 @@ from src.utils.pgn_parser import parse_pgn_lines
 # ──────────────────────────────────────────────────────────────────────────
 #   Environment & config
 # ──────────────────────────────────────────────────────────────────────────
-ENV_FILE = PROJECT_ROOT / "config" / ".env.local"
+ENV_FILE = PROJECT_ROOT / ".env.local"
 load_dotenv(ENV_FILE)
 
 LOGGER = setup_logger("get_games_from_tv", level=logging.INFO)
@@ -146,7 +154,7 @@ def _process_game_block(
 
 
 def _stream_channel(channel: str, added: List[str], updated: List[str]) -> None:
-    """Stream one TV channel, parse games, handle retries & rate‑limits."""
+    """Fetch a batch of games from one TV channel, handle retries & rate‑limits."""
     url = f"https://lichess.org/api/tv/{channel}"
     params = {"clocks": False, "opening": True}
 
@@ -195,10 +203,12 @@ def _parse_stream(
 # ──────────────────────────────────────────────────────────────────────────
 #   Main ingestion loop
 # ──────────────────────────────────────────────────────────────────────────
+
+
 def run_tv_ingestion() -> None:
     """Continuously fetch games from all channels until the time/game limit."""
     start = time.time()
-    total = 0
+    total = 0  # how many games we have ingested so far in this session
 
     while time.time() - start < TIME_LIMIT:
         added, updated = [], []

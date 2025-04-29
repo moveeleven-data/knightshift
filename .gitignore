@@ -43,4 +43,4 @@ coverage.xml
 
 # ────────────── Project-Specific Folders ──────────────
 annotations/
-sudo/
+backups/
