@@ -1,0 +1,82 @@
+# infra/compose/docker-compose.yml
+
+# ───────────────────────────────────────────────────────────────────────
+#  KnightShift stack: Postgres 17 + pipeline container + Apache Airflow
+# ───────────────────────────────────────────────────────────────────────
+
+x-common-env: &common_env
+  PGHOST:     ${PGHOST}
+  PGPORT:     ${PGPORT}
+  PGDATABASE: ${PGDATABASE}
+  PGUSER:     ${PGUSER}
+  PGPASSWORD: ${PGPASSWORD}
+
+  AWS_ACCESS_KEY_ID:     ${AWS_ACCESS_KEY_ID}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+  AWS_DEFAULT_REGION:    ${AWS_DEFAULT_REGION}
+  DB_SECRET_NAME:        ${DB_SECRET_NAME}
+  LICHESS_TOKEN:         ${LICHESS_TOKEN}  # Ensure Lichess token is loaded
+
+services:
+  # ──────────────── Postgres ────────────────
+  db:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_USER:     ${PGUSER:-postgres}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-postgres}
+      POSTGRES_DB:       ${PGDATABASE:-knightshift}
+    ports:
+      - "127.0.0.1:15432:5432"  # Exposing on the host machine
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ../../schemas/init:/docker-entrypoint-initdb.d
+
+  # ──────────────── KnightShift Pipeline ────────────────
+  pipeline:
+    build:
+      context: ../..
+      dockerfile: infra/docker/app.Dockerfile
+    depends_on: [db]
+    environment:
+      <<: *common_env
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/${PGDATABASE:-knightshift}
+    volumes:
+      - ../../logs:/app/logs
+    command: ["bash", "scripts/run.sh"]
+
+  # ──────────────── Apache Airflow ────────────────
+  airflow:
+    build:
+      context: ../..
+      dockerfile: infra/docker/airflow.Dockerfile
+    restart: always
+    depends_on: [db]
+    environment:
+      <<: *common_env
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:postgres@db:5432/${PGDATABASE:-knightshift}
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY}
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "False"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: America/New_York
+      RUNNING_IN_DOCKER: "true"
+    volumes:
+      - ../../airflow/dags:/opt/airflow/dags
+      - ../../airflow/logs:/opt/airflow/logs
+      - ../../airflow/plugins:/opt/airflow/plugins
+      - ../../knightshift:/app/knightshift
+      - ../../config:/app/config
+      - ../../infra/compose/.env:/opt/airflow/.env  # Mount the .env file here
+    ports:
+      - "8080:8080"
+    command: >
+      bash -c "
+        airflow db upgrade &&
+        airflow users create -u admin -p admin -f admin -l admin -r Admin -e admin@example.com || true &&
+        airflow scheduler & 
+        exec airflow webserver --host 0.0.0.0 --port 8080
+      "
+
+volumes:
+  pg_data: {}

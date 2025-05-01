@@ -49,7 +49,7 @@ def _make_task(task_id: str, script_rel_path: str) -> PythonOperator:
     """
     DRY helper that returns a `PythonOperator` which calls the given script.
     """
-    script_abs = f"/app/src/pipeline/{script_rel_path}"
+    script_abs = f"/app/knightshift/pipeline/{script_rel_path}"
     return PythonOperator(
         task_id=task_id, python_callable=_run_script, op_args=[script_abs]
     )

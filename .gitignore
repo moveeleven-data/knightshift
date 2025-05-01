@@ -1,15 +1,19 @@
 # ────────────── Secrets and Environment Config ──────────────
-.env
-.env.local
-.env.docker
+infra/compose/.env
+.env.*
 **/.env.local
 **/.env.docker
 
-# ────────────── Logs ──────────────
-logs/*
-!logs/.gitkeep
+# ────────────── Logs & Outputs ──────────────
 *.log
+logs/
 airflow/logs/
+src/legacy/
+src/archive/
+backups/
+*.gz
+*.zip
+!logs/.gitkeep
 
 # ────────────── Python Bytecode ──────────────
 __pycache__/
@@ -40,7 +44,8 @@ coverage.xml
 
 # ────────────── IDE Configs ──────────────
 .vscode/
+.idea/
+*.iml
 
-# ────────────── Project-Specific Folders ──────────────
-annotations/
-backups/
+# ────────────── Project-Specific ──────────────
+notebooks/

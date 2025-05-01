@@ -6,8 +6,13 @@ A running log of major development milestones, current state, and future plans f
 
 ## April 29, 2025 – Backup Automation and Safety Infrastructure
 
-Implemented a reliable, beginner-friendly backup system for the KnightShift PostgreSQL database using a custom 
-`backup.sh` script combined with `cron` for daily automation. The script runs `pg_dump` from within the running Docker container via `docker exec` to create a timestamped `.sql` file, compresses the result into a `.sql.gz` archive to save space, and logs all activity—including timestamps and errors—to `backups/backup.log`. Cleanup logic was added using the `find` command to automatically delete both raw and compressed backups older than 7 days. The script was made executable, relocated to the project root for easier access, and committed to version control, while the `backups/` folder was excluded using `.gitignore` to prevent large or sensitive files from being tracked. A `cron` job was configured to run the backup every day at 2:00 AM, verified by manually testing the script, inspecting log output, and checking scheduled jobs with `crontab -l`. ShellCheck was recommended for validating the script’s syntax and best practices. The system is now production-aware, with support for future enhancements like cloud sync or failure alerts.
+We implemented a production-aware, beginner-friendly backup system for the KnightShift PostgreSQL database using a custom backup.sh script and cron. The script runs pg_dump inside the Docker container via docker exec, compresses the output, logs to backups/backup.log, and automatically cleans up files older than 7 days. It was moved to the project root, made executable, added to version control, and paired with a cron job scheduled for 2:00 AM daily. We also excluded backups/ via .gitignore and recommended ShellCheck for linting.
+
+In parallel, we refactored the entire database schema to adopt a consistent column naming convention (e.g., white → id_user_white, result → val_result, ingested_at → tm_ingested). Scripts were updated accordingly—get_games_from_tv.py, validate_tv_channel_games.py, and backfill_user_profiles.py—with changes to metadata models and logic to reflect the new schema. The system was rebuilt from scratch (docker compose down -v && up --build), and Airflow’s full DAG pipeline passed all tasks successfully.
+
+A versioned migration file (2025-05-01__rename_columns.sql) was added under schemas/ and enforced via a pre-commit hook. All changes were documented in docs/schema_mappings.md, and a Git tag v0.2.0-pre-refactor was created for rollback safety. Finally, PyCharm was configured to connect to the Dockerized Postgres instance for live schema inspection, completing a robust, future-ready setup for Phase 2.
+
+---------------------------------
                           
 ## April 25, 2025 – Environment Configuration Standardization
 

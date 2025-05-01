@@ -3,6 +3,14 @@
 This folder contains raw SQL definitions for initializing and versioning key
 database tables used in the KnightShift data pipeline.
 
+# Schemas Directory
+
+- `init/`: Base SQL schemas auto-loaded at container startup.
+- `migrations/`: Versioned schema evolution files (manual or tool-driven).
+- `CHANGELOG.md`: History of all structural changes.
+- `schema_mappings.md`: Maps old column names to new.
+- `data_dictionary.md`: Field-by-field definitions for core tables.
+
 ## 🎯 Purpose
 
 These schema files ensure:

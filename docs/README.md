@@ -34,86 +34,20 @@ and upsert logic.
 
 ```
 knightshift/
-├── logs/
-├── backups/
-├── config/
-│   └── .env.template
-├── docs/
 ├── airflow/
-│   ├── logs/
-│   ├── plugins/
-│   ├── dags/
-│   │   └── knightshift_dag.py
-├── docs/
-│   ├── CHANGELOG.md
-│   ├── README.md
-│   ├── failures.md
-│   ├── tech_stack.md
-│   ├── assumptions.md
-│   ├── data_dictionary.md
-│   ├── lifecycle_diagram.md
-│   ├── data_architecture.md
-│   ├── knightshift_overview.md
-│   └── schema_reference.md
-├── explorations/
-│   ├── vector_embeddings/        # Vector DBs (Pinecone, FAISS) – Similarity search
-│   ├── graph_queries/            # Graph DBs (Neo4j, Gremlin) – Relationship modeling
-│   ├── document_storage/         # Document DBs (MongoDB, Couchbase) – Semi-structured JSON
-│   ├── timeseries/               # Time-Series DBs (InfluxDB, TimescaleDB) – Game frequency, ELO over time
-│   ├── columnar_vs_row/          # OLAP vs OLTP, analytics workloads
-│   ├── key_value_store/          # Redis, DynamoDB-style storage
-│   └── README.md
-├── src/
-│   ├── db/   
-│   ├── README.md
-│   └── game_upsert.py
-│   ├── pipeline/    
-│   │   ├── README.md
-│   │   ├── run_cleaning.py
-│   │   ├── run_enrichment.py
-│   │   └── run_ingestion.py
-│   ├── ingestion/
-│   │   ├── README.md
-│   │   └── get_games_from_tv.py
-│   ├── cleaning/
-│   │   ├── README.md
-│   │   └── validate_tv_channel_games.py
-│   ├── enrichment/
-│   │   ├── README.md
-│   │   └── backfill_user_profiles.py
-│   ├── utils/
-│   │   ├── README.md
-│   │   ├── logging_utils.py
-│   │   ├── pgn_parser.py
-│   │   ├── db_utils.py
-│   │   └── init__.py
-│   ├── legacy/
-│   │   ├── check_urls_of_games.py
-│   │   ├── update_all_games.py
-│   │   └── get_games_from_users.py
-│   ├── __init__.py
-│   └── main.py
-├── tests/
-│   ├── README.md
-│   ├── test_pgn_parser.py
-│   ├── test_db_utils.py
-│   ├── test_get_games_from_tv.py
-│   └── test_validation_logic.py
-├── schemas/
-│   ├── README.md
-│   ├── CHANGELOG.md
-│   ├── lichess_users.sql
-│   └── tv_channel_games.sql
-├── .env                 # Renamed .env.docker to .env
-├── .gitignore
-├── Dockerfile
-├── Dockerfile.airflow
-├── docker-compose.yml
-├── requirements.txt
-├── pytest.ini
-├── run_knightshift.bat
-├── strip_comments.py    # Strips comments from all files and save clean versions
-└── run.sh
+│   ├── dags/                   # Airflow DAGs
+│   ├── logs/                   # Task and execution logs
+│   ├── plugins/                # Airflow custom plugins
+├── annotations/                # Annotations and exploration docs
+├── backups/                    # Backup logs and files
+├── config/                     # Configuration files
+├── docs/                       # Documentation (e.g., changelogs, architecture)
+├── explorations/               # Exploration of data models (e.g., NoSQL, Graph)
+├── infra/                      # Infrastructure configuration (Docker, Compose)
+├── knightshift/                # Core pipeline scripts (ingestion, cleaning, enrichment)
+├── logs/                       # Pipeline logs
+├── schemas/                    # Database schemas and migrations
+└── scripts/                    # Utility scripts (e.g., run scripts)
 ```
 
 ---
