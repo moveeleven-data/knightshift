@@ -29,6 +29,9 @@ jobs:
       run: |
         pip show pytest  # Verify pytest installation
 
+    - name: List installed packages
+      run: pip freeze  # List all installed packages to confirm pytest installation
+
     - name: Run tests
       run: |
-        pytest --maxfail=1 --disable-warnings -q  # Run tests
+        pytest --maxfail=1 --disable-warnings -v  # Use -v for verbose output
