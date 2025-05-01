@@ -1,5 +1,6 @@
 # ────────────── Secrets and Environment Config ──────────────
 infra/compose/.env
+infra/compose/secrets/
 .env.*
 **/.env.local
 **/.env.docker
@@ -8,8 +9,6 @@ infra/compose/.env
 *.log
 logs/
 airflow/logs/
-src/legacy/
-src/archive/
 backups/
 *.gz
 *.zip

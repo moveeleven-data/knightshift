@@ -1,21 +1,19 @@
 # infra/compose/docker-compose.yml
-
 # ───────────────────────────────────────────────────────────────────────
 #  KnightShift stack: Postgres 17 + pipeline container + Apache Airflow
 # ───────────────────────────────────────────────────────────────────────
+version: '3.7'
 
 x-common-env: &common_env
   PGHOST:     ${PGHOST}
   PGPORT:     ${PGPORT}
   PGDATABASE: ${PGDATABASE}
   PGUSER:     ${PGUSER}
-  PGPASSWORD: ${PGPASSWORD}
-
-  AWS_ACCESS_KEY_ID:     ${AWS_ACCESS_KEY_ID}
+  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
   AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-  AWS_DEFAULT_REGION:    ${AWS_DEFAULT_REGION}
-  DB_SECRET_NAME:        ${DB_SECRET_NAME}
-  LICHESS_TOKEN:         ${LICHESS_TOKEN}  # Ensure Lichess token is loaded
+  AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+  DB_SECRET_NAME: ${DB_SECRET_NAME}
+  LICHESS_TOKEN: ${LICHESS_TOKEN}
 
 services:
   # ──────────────── Postgres ────────────────
@@ -23,14 +21,15 @@ services:
     image: postgres:17
     restart: always
     environment:
-      POSTGRES_USER:     ${PGUSER:-postgres}
-      POSTGRES_PASSWORD: ${PGPASSWORD:-postgres}
-      POSTGRES_DB:       ${PGDATABASE:-knightshift}
+      POSTGRES_USER: ${PGUSER:-postgres}
+      POSTGRES_DB: ${PGDATABASE:-knightshift}
     ports:
       - "127.0.0.1:15432:5432"  # Exposing on the host machine
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ../../schemas/init:/docker-entrypoint-initdb.d
+    secrets:
+      - pg_password
 
   # ──────────────── KnightShift Pipeline ────────────────
   pipeline:
@@ -44,6 +43,8 @@ services:
     volumes:
       - ../../logs:/app/logs
     command: ["bash", "scripts/run.sh"]
+    secrets:
+      - pg_password
 
   # ──────────────── Apache Airflow ────────────────
   airflow:
@@ -77,6 +78,15 @@ services:
         airflow scheduler & 
         exec airflow webserver --host 0.0.0.0 --port 8080
       "
+    secrets:
+      - pg_password
+
+# ───────────────────────────────────────────────────────────────────────
+# Secrets definition
+# ───────────────────────────────────────────────────────────────────────
+secrets:
+  pg_password:
+    file: ../../infra/compose/secrets/pg_password.txt  # This is where your PostgreSQL password is stored securely.
 
 volumes:
   pg_data: {}

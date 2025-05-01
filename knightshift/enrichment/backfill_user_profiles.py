@@ -122,7 +122,7 @@ TIME_PER_USER = 0.5  # seconds between individual API calls
 BATCH_SIZE = 3_000  # users processed before a long pause
 BATCH_PAUSE = 15 * 60  # seconds to pause after each big batch
 PROGRESS_INTERVAL = 30  # seconds between progress log lines
-SCRIPT_TIME_LIMIT = 10  # hard stop (seconds) – keeps CI tests fast
+SCRIPT_TIME_LIMIT = 3  # hard stop (seconds) – keeps CI tests fast
 
 # ──────────────────────────────────────────────────────────────────────────
 #   Shared HTTP session
