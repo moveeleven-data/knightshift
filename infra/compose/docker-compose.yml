@@ -18,6 +18,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: ${PGUSER:-postgres}
+      POSTGRES_PASSWORD: ${PGPASSWORD}
       POSTGRES_DB: ${PGDATABASE:-knightshift}
     ports:
       - "127.0.0.1:15432:5432"  # Exposing on the host machine
@@ -117,7 +118,7 @@ services:
 
 secrets:
   pg_password:
-    file: ../../infra/compose/secrets/pg_password.txt
+    file: pg_password.txt
 
 volumes:
   pg_data: {}

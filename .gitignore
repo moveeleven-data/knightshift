@@ -10,6 +10,7 @@ infra/compose/secrets/
 config/.env.*
 secrets.*
 credentials.*
+infra/compose/pg_password.txt
 
 # ────────────── Logs & Outputs ──────────────
 *.log
@@ -89,4 +90,3 @@ docs/archive/
 
 # ────────────── Git Safety ──────────────
 .git/
-infra/compose/secrets/
