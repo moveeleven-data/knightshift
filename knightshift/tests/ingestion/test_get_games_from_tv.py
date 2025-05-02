@@ -39,18 +39,17 @@ def test_run_tv_ingestion(mock_load_db_credentials):
     def fake_time():
         return times.pop(0) if times else start_time + 100  # End after 3 iterations
 
-    with patch(
-        "knightshift.ingestion.get_games_from_tv.time.time", side_effect=fake_time
-    ), patch(
-        "knightshift.ingestion.get_games_from_tv.CHANNELS", ["racingKings"]
-    ), patch(
-        "knightshift.ingestion.get_games_from_tv._stream_channel"
-    ) as mock_stream_channel, patch(
-        "knightshift.ingestion.get_games_from_tv.time.sleep"
-    ) as mock_sleep, patch(
-        "knightshift.ingestion.get_games_from_tv.requests.get"
-    ) as mock_get:
-
+    with (
+        patch(
+            "knightshift.ingestion.get_games_from_tv.time.time", side_effect=fake_time
+        ),
+        patch("knightshift.ingestion.get_games_from_tv.CHANNELS", ["racingKings"]),
+        patch(
+            "knightshift.ingestion.get_games_from_tv._stream_channel"
+        ) as mock_stream_channel,
+        patch("knightshift.ingestion.get_games_from_tv.time.sleep") as mock_sleep,
+        patch("knightshift.ingestion.get_games_from_tv.requests.get") as mock_get,
+    ):
         mock_get.return_value.ok = True
         mock_get.return_value.status_code = 200
         mock_stream_channel.return_value = None

@@ -2,7 +2,7 @@
 """
 get_games_from_tv.py
 ~~~~~~~~~~~~~~~~~~~~
-Streams live chess games from **Lichess TV**, parses each PGN with
+Streams live chess games from **Lichess TV**, parses each PGN with
 `parse_pgn_lines`, and **upserts** the results into PostgreSQL.
 
 Execution flow
@@ -30,6 +30,7 @@ import sys
 import time
 from pathlib import Path
 from typing import Final, List, Sequence
+from prometheus_client import Counter  # Import Prometheus counter
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Third-party imports
@@ -140,6 +141,31 @@ HTTP.headers.update(
     }
 )
 
+# ──────────────────────────────────────────────────────────────────────────
+#   Prometheus Metrics Setup (Add counters here)
+# ──────────────────────────────────────────────────────────────────────────
+instance = os.getenv("INSTANCE_NAME", "pipeline:8000")  # Default to "pipeline:8000"
+job = os.getenv("JOB_NAME", "knightshift")  # Default to "knightshift"
+
+# Prometheus Counters for game ingestion
+GAMES_INGESTED = Counter(
+    "games_ingested_total",
+    "Total number of games ingested from Lichess TV",
+    ["instance", "job"],
+)
+
+UPDATES = Counter(
+    "games_updated_total",
+    "Total number of games updated",
+    ["instance", "job"],
+)
+
+ADDITIONS = Counter(
+    "games_added_total",
+    "Total number of new games added",
+    ["instance", "job"],
+)
+
 
 # ──────────────────────────────────────────────────────────────────────────
 #   Helper functions
@@ -148,13 +174,30 @@ def _process_game_block(
     pgn_lines: List[bytes], added: List[str], updated: List[str]
 ) -> None:
     """Parse a single PGN block and upsert it into Postgres."""
+    # Parse PGN lines into game data
     game = parse_pgn_lines(pgn_lines)
+
     if "site" not in game:  # sanity guard
         return
 
+    # Build the database row from the parsed PGN data
     db_row = build_game_data(game)
+
+    # Perform the upsert operation (insert or update)
     was_updated = upsert_game(SESSION, TV_GAMES_TBL, db_row)
-    (updated if was_updated else added).append(db_row["id_game"])
+
+    # Increment the appropriate Prometheus counters
+    if was_updated:
+        UPDATES.labels(instance=instance, job=job).inc()  # Increment the update counter
+        updated.append(db_row["id_game"])
+    else:
+        ADDITIONS.labels(
+            instance=instance, job=job
+        ).inc()  # Increment the addition counter
+        added.append(db_row["id_game"])
+
+    # Increment the total games ingested counter
+    GAMES_INGESTED.labels(instance=instance, job=job).inc()
 
 
 def _stream_channel(channel: str, added: List[str], updated: List[str]) -> None:
@@ -207,8 +250,6 @@ def _parse_stream(
 # ──────────────────────────────────────────────────────────────────────────
 #   Main ingestion loop
 # ──────────────────────────────────────────────────────────────────────────
-
-
 def run_tv_ingestion() -> None:
     """Continuously fetch games from all channels until the time/game limit."""
     start = time.time()

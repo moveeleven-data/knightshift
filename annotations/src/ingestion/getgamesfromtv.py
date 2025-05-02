@@ -961,7 +961,6 @@ def _process_game_block(
     added: List[str],  # list of IDs we successfully inserted
     updated: List[str],  # list of IDs we updated in place
 ) -> None:
-
     game = parse_pgn_lines(pgn_lines)
 
     # 1️⃣  Parse the raw PGN into a Python dict (headers, moves, etc.)
@@ -1077,7 +1076,6 @@ def _stream_channel(channel: str, added: List[str], updated: List[str]) -> None:
         #     → To fetch up to 30 games per channel instead of 10, simply set `params["nb"] = 30` before calling `.get()`.)
 
         if resp.status_code == 429:  # too many requests → bail out
-
             # If Lichess returns HTTP status 429, it means we've been rate-limited
             # (we sent too many requests in a short period).
             # In that case, we immediately log an error and exit the script.
@@ -1092,7 +1090,6 @@ def _stream_channel(channel: str, added: List[str], updated: List[str]) -> None:
             # It's better to stop cleanly than to keep retrying and make it worse.
 
         if resp.ok:
-
             # If the response was successful (status code 200–299), we're good.
             # Break out of the retry loop and move on to processing the stream.
             break
@@ -1151,7 +1148,6 @@ def _stream_channel(channel: str, added: List[str], updated: List[str]) -> None:
         # This gives Lichess (or the network) time to recover if it was a temporary problem.
 
     else:
-
         # ➔ Important: this `else` belongs to the `for` loop — not to any `if`.
         #
         # ➔ How `for-else` works:
@@ -1297,7 +1293,6 @@ def _parse_stream(
     # We keep the raw bytes until needed because the Lichess API streams data line-by-line.
 
     for raw in resp.iter_lines():
-
         # --- TINY INCREMENTAL WAIT ---
         # Might pause for a few milliseconds if lines haven't fully arrived yet.
         # (Streaming responses allow immediate reading, but slight network buffering can occur.)
@@ -1366,7 +1361,6 @@ def _parse_stream(
         #   not long-term caching.
 
         if line.startswith("1. "):
-
             # If this line starts with "1. ", it's the first move of the game.
             # Since we already buffered all the header lines (and just added this move line),
             # we now have the **full PGN block** (headers + moves) ready to process.
@@ -1428,7 +1422,6 @@ def run_tv_ingestion() -> None:
     # Initialize a counter to keep track of how many games we have ingested so far in this session.
 
     while time.time() - start < TIME_LIMIT:
-
         # Keep looping as long as the amount of time passed since `start`
         # is less than the allowed TIME_LIMIT (e.g., 30 seconds, 300 seconds, etc.).
 
@@ -1440,7 +1433,6 @@ def run_tv_ingestion() -> None:
         # We reset them each time to keep clean batch-level statistics.
 
         for ch in CHANNELS:
-
             # Loop over each TV channel in the predefined CHANNELS list.
             # (bullet, blitz, classical, rapid, chess960, etc.)
             # We will fetch and process games separately for each channel during this batch.
@@ -1473,7 +1465,6 @@ def run_tv_ingestion() -> None:
         # (total keeps counting across all batches in this run.)
 
         if total >= MAX_GAMES:
-
             # If we have ingested too many games (reached the MAX_GAMES limit):
 
             LOGGER.info(
@@ -1512,7 +1503,6 @@ def run_tv_ingestion() -> None:
 # ──────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-
     # This is the standard Python way to say:
     # "Only run the code below if this file is being executed directly — not when it is imported."
     #

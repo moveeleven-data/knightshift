@@ -7,8 +7,8 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install bash and Postgres client
-RUN apt-get update && apt-get install -y bash postgresql-client && rm -rf /var/lib/apt/lists/*
+# Install bash, Postgres client, and procps (for ps command)
+RUN apt-get update && apt-get install -y bash postgresql-client procps && rm -rf /var/lib/apt/lists/*
 
 # Copy and install Python requirements
 COPY requirements.txt .

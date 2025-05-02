@@ -17,7 +17,7 @@ import os
 import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Final, List
+from typing import Final
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -74,7 +74,6 @@ with DAG(
     max_active_runs=1,
     tags=["knightshift", "chess"],
 ) as dag:
-
     # ── 1) Ingest  ────────────────────────────────────────────────────────── #
     ingest_tv_games = _make_task("ingest_tv_games", "run_ingestion.py")
 

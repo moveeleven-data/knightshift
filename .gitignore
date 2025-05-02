@@ -87,6 +87,7 @@ Thumbs.db
 notebooks/
 knightshift/archive/
 docs/archive/
+annotations/
 
 # ────────────── Git Safety ──────────────
 .git/

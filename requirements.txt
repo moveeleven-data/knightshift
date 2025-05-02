@@ -1,6 +1,7 @@
 boto3==1.37.18              # AWS SDK for Python — interacts with AWS services like Secrets Manager for DB credentials
 botocore==1.37.18           # Handles AWS communication
 pg8000==1.31.2              # Postgres driver - lets SQLAlchemy connect to your Postgres DB using Python
+prometheus_client==0.16.0
 python-dotenv==1.0.1        # Loads env variables from .env files
 SQLAlchemy==1.4.46          # Core SQL toolkit and ORM - used to build queries, manage DB connections, and perform upserts
 requests                    # Simplified HTTP client - used to fetch PGNs and user profiles from the Lichess API

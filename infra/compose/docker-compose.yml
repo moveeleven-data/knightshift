@@ -35,7 +35,8 @@ services:
     build:
       context: ../..
       dockerfile: infra/docker/app.Dockerfile
-    depends_on: [db]
+    depends_on:
+      - db
     environment:
       <<: *common_env
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/${PGDATABASE:-knightshift}
@@ -97,7 +98,7 @@ services:
     environment:
       - PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus
     depends_on:
-      - pipeline
+      - pipeline  # Ensures Prometheus starts after the pipeline container
     networks:
       - knightshift_network
 

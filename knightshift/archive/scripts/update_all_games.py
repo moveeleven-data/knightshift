@@ -43,9 +43,16 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.append(str(PROJECT_ROOT))
 
 # --- Import Shared Utilities ---
-from knightshift.utils.db_utils import load_db_credentials, get_database_url, get_lichess_token
+from knightshift.utils.db_utils import (
+    load_db_credentials,
+    get_database_url,
+    get_lichess_token,
+)
 from knightshift.utils.logging_utils import setup_logger
-from knightshift.utils.pgn_parser import parse_game_data_from_pgn, extract_moves_from_pgn
+from knightshift.utils.pgn_parser import (
+    parse_game_data_from_pgn,
+    extract_moves_from_pgn,
+)
 
 # --- Logging Setup ---
 logger = setup_logger(name="update_all_games", level=logging.INFO)
