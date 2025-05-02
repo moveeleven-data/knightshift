@@ -18,6 +18,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY knightshift/ ./knightshift/
 COPY scripts/run.sh ./run.sh
 
+# Copy Prometheus metrics script
+COPY prometheus_metrics/ ./prometheus_metrics/
+
 # Make run.sh executable
 RUN chmod +x run.sh
 

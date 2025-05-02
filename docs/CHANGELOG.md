@@ -1,12 +1,24 @@
 📈 Project Progress – KnightShift
 
 A running log of major development milestones, current state, and future plans for the KnightShift data pipeline.
+                            
+---------------------------------    
+
+## May 1, 2025 – Test Automation and GitHub CI Integration
+
+Enhanced the CI/CD pipeline by creating two test scripts and integrating them with GitHub Actions 
+for continuous integration. The test scripts were developed to ensure that key functionalities, such as game validation and user profile backfilling, are working as expected. Specifically, we wrote tests for validating TV channel game data and for the backfill_user_profiles process that pulls data from the Lichess API and updates the database.
+
+We also added additional checks to our validation script to ensure that edge cases and potential data anomalies are caught, further improving the robustness of our system.
+
+We then configured GitHub Actions to run these tests automatically on each push to the master branch, ensuring that any new changes are tested before being merged. The integration with GitHub Actions marks a significant improvement in our development workflow, automating the testing process and catching potential issues early.
 
 ---------------------------------    
 
 ## April 29, 2025 – Backup Automation and Safety Infrastructure
 
-We implemented a production-aware, beginner-friendly backup system for the KnightShift PostgreSQL database using a custom backup.sh script and cron. The script runs pg_dump inside the Docker container via docker exec, compresses the output, logs to backups/backup.log, and automatically cleans up files older than 7 days. It was moved to the project root, made executable, added to version control, and paired with a cron job scheduled for 2:00 AM daily. We also excluded backups/ via .gitignore and recommended ShellCheck for linting.
+Implemented a production-aware, beginner-friendly backup system for the KnightShift PostgreSQL database using a 
+custom backup.sh script and cron. The script runs pg_dump inside the Docker container via docker exec, compresses the output, logs to backups/backup.log, and automatically cleans up files older than 7 days. It was moved to the project root, made executable, added to version control, and paired with a cron job scheduled for 2:00 AM daily. We also excluded backups/ via .gitignore and recommended ShellCheck for linting.
 
 In parallel, we refactored the entire database schema to adopt a consistent column naming convention (e.g., white → id_user_white, result → val_result, ingested_at → tm_ingested). Scripts were updated accordingly—get_games_from_tv.py, validate_tv_channel_games.py, and backfill_user_profiles.py—with changes to metadata models and logic to reflect the new schema. The system was rebuilt from scratch (docker compose down -v && up --build), and Airflow’s full DAG pipeline passed all tasks successfully.
 

@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 15s  # Scrape every 15 seconds
+
+scrape_configs:
+  - job_name: 'knightshift'
+    static_configs:
+      - targets: ['pipeline:8000']  # Scrape the Python service at port 8000

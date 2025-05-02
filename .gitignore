@@ -1,33 +1,52 @@
-# ────────────── Secrets and Environment Config ──────────────
+# ────────────── Secrets & Environment Config ──────────────
+.env
+.env.*
 infra/compose/.env
 infra/compose/secrets/
-.env.*
-**/.env.local
-**/.env.docker
+*.key
+*.pem
+*.crt
+*.enc
+config/.env.*
+secrets.*
+credentials.*
 
 # ────────────── Logs & Outputs ──────────────
 *.log
+*.out
+*.err
 logs/
 airflow/logs/
 backups/
+infra/compose/airflow/logs/
 *.gz
 *.zip
+*.tar
+*.bak
+*.tmp
+*.dump
+*.trace
 !logs/.gitkeep
 
-# ────────────── Python Bytecode ──────────────
+# ────────────── Python Bytecode / Build ──────────────
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
 
-# ────────────── Virtual Envs ──────────────
+# ────────────── Virtual Environments ──────────────
 .venv/
-env/
 venv/
+env/
 ENV/
 env.bak/
 venv.bak/
 
-# ────────────── Test / Lint Artefacts ──────────────
+# ────────────── Test / Lint / Coverage ──────────────
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -35,16 +54,38 @@ venv.bak/
 .hypothesis/
 .coverage
 .coverage.*
-.cache
-nosetests.xml
-coverage.xml
+.cache/
 *.cover
 *.py,cover
+nosetests.xml
+coverage.xml
+htmlcov/
 
-# ────────────── IDE Configs ──────────────
-.vscode/
+# ────────────── IDE / Editor / Project Config ──────────────
 .idea/
+.vscode/
+*.sublime*
 *.iml
 
-# ────────────── Project-Specific ──────────────
+# ────────────── Data Files ──────────────
+*.csv
+*.tsv
+*.parquet
+*.npy
+*.npz
+*.db
+*.sqlite
+*.pkl
+*.jsonl
+
+# ────────────── System Files ──────────────
+.DS_Store
+Thumbs.db
+
+# ────────────── Project Archive / Explorations ──────────────
 notebooks/
+knightshift/archive/
+docs/archive/
+
+# ────────────── Git Safety ──────────────
+.git/
