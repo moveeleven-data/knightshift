@@ -89,3 +89,4 @@ docs/archive/
 
 # ────────────── Git Safety ──────────────
 .git/
+infra/compose/secrets/
