@@ -1,7 +1,13 @@
 📈 Project Progress – KnightShift
 
 A running log of major development milestones, current state, and future plans for the KnightShift data pipeline.
-                   
+         
+---------------------------------
+
+## May 3, 2025 - Current project state
+
+KnightShift is fully dockerized, using Airflow for orchestration, Prometheus for metrics collection, and Grafana for dashboard monitoring. The pipeline ingests, cleans, and enriches data with automated CI/CD through GitHub Actions, running tests on every push. Database backups are automated, and schema standardization is in place with versioned migrations. Environment variables are managed via .env files, and secrets are securely handled with AWS Secrets Manager. Recent refactors include modularizing execution and implementing user profile enrichment from Lichess. The system is stable, production-ready, and scalable for future expansion.
+                 
 --------------------------------- 
 
 ## May 2, 2025 – Grafana Dashboard and Prometheus Integration
