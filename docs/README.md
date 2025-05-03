@@ -126,6 +126,38 @@ Open your browser and go to:
 http://localhost:8080
 Username: admin
 Password: admin
+      
+---
+
+Secrets Detection:
+
+This project uses detect-secrets to prevent committing sensitive data. Known secrets are tracked in .secrets.baseline, which suppresses repeat alerts. If secrets are rotated or removed, regenerate the baseline using detect-secrets scan > .secrets.baseline. This helps maintain security without adding noise to the commit process.
+ 
+---
+
+Restoring Grafana Dashboard from Backup
+
+If you’ve torn down the stack or lost your Grafana dashboard, restore it with the backup located at:
+
+/backups/grafana/grafana_backup_2025-05-03.tar.gz
+       
+
+To restore:
+
+Stop any running containers:
+docker compose down
+        
+
+Restore the Grafana data volume:
+docker run --rm \
+-v compose_grafana_data:/volume \
+-v $(pwd)/backups/grafana:/backup \
+alpine \
+sh -c "rm -rf /volume/* && tar xzf /backup/grafana_backup_2025-05-03.tar.gz -C /volume"
+           
+
+Rebuild and launch the stack:
+docker compose up --build
 
 ---
 

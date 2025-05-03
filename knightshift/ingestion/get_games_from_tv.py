@@ -30,11 +30,11 @@ import sys
 import time
 from pathlib import Path
 from typing import Final, List, Sequence
-from prometheus_client import Counter  # Import Prometheus counter
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Third-party imports
 # ────────────────────────────────────────────────────────────────────────────────
+from prometheus_client import Counter
 import requests
 from dotenv import load_dotenv
 from sqlalchemy import (

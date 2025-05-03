@@ -42,7 +42,7 @@ services:
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/${PGDATABASE:-knightshift}
     volumes:
       - ../../logs:/app/logs
-    command: ["bash", "scripts/run.sh"]
+    # command: ["bash", "scripts/run.sh"]
     env_file:
       - .env
     networks:
