@@ -1,17 +1,20 @@
 📈 Project Progress – KnightShift
 
 A running log of major development milestones, current state, and future plans for the KnightShift data pipeline.
-                            
+                   
+--------------------------------- 
+
+## May 2, 2025 – Grafana Dashboard and Prometheus Integration
+Incorporated Grafana to monitor key metrics, creating a dashboard that tracks games ingested over time, broken down by job. Metrics include the 95th percentile of request duration, total HTTP requests, HTTP requests with status 200, and the average request duration histogram. An email alert was also set up to notify when there is at least one HTTP error.
+
+Prometheus was successfully integrated, with key metrics tracked through the ingestion script, including HTTP request totals, errors, and latencies, as well as ingestion metrics like the number of games ingested, added, and updated. Additional metrics were configured for tracking ingestion duration and overall performance, with aggregations grouped by instance and job.
+         
 ---------------------------------    
 
 ## May 1, 2025 – Test Automation and GitHub CI Integration
+Enhanced the CI/CD pipeline by creating two test scripts and integrating them with GitHub Actions for continuous integration. These tests ensure key functionalities, such as game validation and user profile backfilling, work as expected, including validation of TV channel game data and backfill_user_profiles pulling from the Lichess API.
 
-Enhanced the CI/CD pipeline by creating two test scripts and integrating them with GitHub Actions 
-for continuous integration. The test scripts were developed to ensure that key functionalities, such as game validation and user profile backfilling, are working as expected. Specifically, we wrote tests for validating TV channel game data and for the backfill_user_profiles process that pulls data from the Lichess API and updates the database.
-
-We also added additional checks to our validation script to ensure that edge cases and potential data anomalies are caught, further improving the robustness of our system.
-
-We then configured GitHub Actions to run these tests automatically on each push to the master branch, ensuring that any new changes are tested before being merged. The integration with GitHub Actions marks a significant improvement in our development workflow, automating the testing process and catching potential issues early.
+Added additional checks to the validation script to catch edge cases and data anomalies, further improving system robustness. Configured GitHub Actions to run these tests automatically on each push to the master branch, ensuring early detection of potential issues.
 
 ---------------------------------    
 

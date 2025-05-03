@@ -10,8 +10,6 @@ infra/compose/secrets/
 config/.env.*
 secrets.*
 credentials.*
-infra/compose/pg_password.txt
-infra/compose/gf_password.txt
 
 # ────────────── Logs & Outputs ──────────────
 *.log
