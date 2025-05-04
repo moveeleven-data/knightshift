@@ -1,53 +1,50 @@
-📈 Project Progress – KnightShift
+Project Progress – KnightShift
 
 A running log of major development milestones, current state, and future plans for the KnightShift data pipeline.
-              
----------------------------------
 
-# Running & Project Snapshot
+✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦
 
-## May 4, 2025
-
-KnightShift is a modular, Dockerized data pipeline orchestrated by Airflow, with ingestion, cleaning, enrichment, 
-and validation stages. All services (Airflow, Postgres, etc.) are spun up via `docker compose up` from 
-`infra/compose/`, which serves as the control hub. This starts the DAG scheduler, web UI, and pipeline 
-infrastructure. This manual `cd` + `docker compose up` approach is perfectly fine for local development and 
-debugging; to improve portability or automation later, wrap it in a script or use `make`. The observability stack 
-(Prometheus/Grafana) lives separately in `experiments/observability_sim/` and can run independently to simulate 
-metrics for UI testing or dashboard design without impacting the main pipeline.
-
----------------------------------
-         
-# Added Experiment -> Observability Sim
+# Checkpoint Reached → knightshift_foundation (observability sim)
 
 ## May 4, 2025
 
-This folder (root/experiments/observability_sim) contains a standalone Prometheus + Grafana simulation environment 
-used to test and demonstrate observability concepts **without affecting the core KnightShift pipeline**. It runs a fake ingestion service (`prometheus_metrics.py`) that emits synthetic metrics to port `8000`, which Prometheus scrapes and Grafana visualizes. The setup is designed for local, exploratory use and is decoupled from DAG execution, live data, or batch orchestration. This allows for fast prototyping of metrics and dashboards without interfering with production containers.
+Created a fully self-contained snapshot of the KnightShift pipeline under `checkpoints/knightshift_foundation`, capturing both the full working batch pipeline and a simulated observability stack.
 
-As of May 4, 2025, I expanded this environment into a **fully self-contained snapshot of the entire KnightShift 
-pipeline**, frozen at a major working checkpoint. I copied over the complete `knightshift/` and `airflow/` folders, 
-brought in the production `docker-compose.yml` as `docker-compose.pipeline.yml`, and updated all volume paths to be 
-local. I also renamed the main `.env` to `.env.pipeline` to avoid conflicts. The snapshot now runs its own isolated 
-Postgres instance with a separate volume (`pg_data`), and I confirmed it does **not** share data with the main pipeline. It includes the real DAG, scripts, schema init files, and a working batch pipeline, but all decoupled from the production environment. Airflow runs on [localhost:8081](http://localhost:8081) (`admin` / `admin`), Prometheus on [localhost:9090](http://localhost:9090), and Grafana on [localhost:3000](http://localhost:3000) (`admin` / `admin`), with a custom dashboard pre-configured to show simulated ingestion metrics.
+Originally built as a standalone Prometheus + Grafana simulation environment, this folder now includes:
+- A fake ingestion service (`prometheus_metrics.py`) emitting synthetic metrics to port `8000`
+- Prometheus scraping and Grafana dashboarding (ideal for local experimentation)
+- The complete `knightshift/` and `airflow/` folders, fully integrated
+- A renamed `.env.pipeline` and localized volume paths for isolation
 
-To run the full environment (including both the observability stack and the real pipeline), navigate to this folder 
-and execute: docker compose up
+The snapshot runs its own dedicated Postgres database (`pg_data`) and is fully decoupled from the main project — confirmed to not share any data or state. It includes a real DAG, schema init files, and a production-style pipeline that can run independently of the main environment.
 
-Added `.dockerignore` to infra/docker and /observability_sim.
+Airflow is available at [localhost:8081](http://localhost:8081) (`admin` / `admin`), Prometheus at [localhost:9090](http://localhost:9090), and Grafana at [localhost:3000](http://localhost:3000), with a custom dashboard preloaded. A previously backed-up Grafana dashboard was successfully restored into this environment.
 
----------------------------------
+This environment is launched directly from its own folder using:
 
-## May 3, 2025 - Current project state
+docker compose up --build
 
-KnightShift is fully dockerized and phase-complete: Airflow orchestrates a modular DAG; **Prometheus + Grafana simulate real-time metrics and alerts**, offering a scaffolding for observability without live data connections. CI/CD runs via GitHub Actions with pytest and pre-commit hooks (black, detect-secrets). Code is structured into ingestion, cleaning, enrichment, and utils, with schema managed via versioned SQL, enforced naming, and baseline secrets tracking. The system is stable, reproducible, and runs end-to-end with simulated monitoring, backups, and minimal manual touch. Next: add Great Expectations, integrate Alembic, consider DAG scaling, and prep for cloud or data source expansion.
+╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷
+                  
+Note: The main KnightShift pipeline remains managed through infra/compose/, which starts core services including Airflow, Postgres, and DAG scheduling via its own docker compose up. Prometheus and Grafana have been removed from the main stack and now live exclusively within this snapshot. The knightshift_foundation checkpoint runs fully independently for UI prototyping, testing, and historical preservation.
 
-Note: Prometheus and Grafana are included in this project in a simulated capacity to demonstrate observability 
-concepts. In get_games_from_tv.py, Prometheus counters (e.g., games_ingested_total, games_updated_total) are instrumented and incremented during actual ingestion, but no HTTP metrics endpoint is exposed via start_http_server, meaning those metrics exist only in-memory during execution and are discarded when the script exits. A separate script, prometheus_metrics.py, launches a real Prometheus server on port 8000 and simulates ingestion by emitting mock metrics such as request durations, HTTP errors, and game counts. This script is not tied to the ingestion process and exists primarily for UI and dashboard demonstration. Although Docker Compose exposes port 8000 from the pipeline container, Prometheus can only scrape if the simulation script is actively running, which is not the case during real execution. Since the pipeline is a short-lived batch process (~1–2 minutes every 2 hours), Prometheus typically finds no available metrics to scrape.
+Also added .dockerignore files to infra/docker/ and checkpoints/knightshift_foundation/ to prevent container bloat.
+                
+╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷╷
 
-This limitation reflects a structural mismatch between Prometheus' pull-based model, which assumes long-running services, and the project’s design as a transient, Airflow-orchestrated batch pipeline. Supporting real-time observability in this context would require architectural workarounds like Prometheus Pushgateway or sidecar metric containers to persist state between runs. These solutions, while possible, introduce considerable overhead that is not warranted in this case. The existing simulated setup successfully demonstrates metric design and Grafana dashboarding without requiring full integration. It serves as a learning scaffold and can be adapted or extended in future cloud-native deployments, where observability is often handled more naturally through platform-managed monitoring tools.
+Reflections & Structure Going Forward:
 
---------------------------------- 
+This marks a major architectural milestone — the first modular, observable, and reproducible state of KnightShift.
+
+The checkpoints/ folder will serve as the canonical space for frozen, runnable versions of the pipeline at key milestones.
+
+The experiments/ folder remains a sandbox for lightweight prototypes, one-off technical deep dives, or metric testing.
+
+All active development continues in the main project folder, which remains the central workspace for pipeline evolution.
+    
+
+✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧
+
 
 ## May 2, 2025 – Simulated Grafana Dashboard and Prometheus Integration
 

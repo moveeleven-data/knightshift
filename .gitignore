@@ -87,7 +87,7 @@ notebooks/
 knightshift/archive/
 docs/archive/
 annotations/
-experiments/observability_sim/.env
+checkpoints/knightshift_foundation/.env
 
 # ────────────── Git Safety ──────────────
 .git/

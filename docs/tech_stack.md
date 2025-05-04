@@ -23,6 +23,20 @@ This document explains the key technologies used in the KnightShift pipeline and
 
 ---
 
+## Apache Airflow (via Docker)
+- **Why:** Production-grade DAG-based orchestration with scheduling, retry, and UI-based monitoring.
+- **Used For:** Running the full KnightShift pipeline (ingestion → cleaning → enrichment) as DAG tasks.
+- **Extras:** Airflow UI available at `localhost:8080` for main pipeline, and `localhost:8081` for snapshot.
+
+---
+
+## Prometheus + Grafana
+- **Why:** Real-time observability and metrics visualization.
+- **Used For:** Simulated metrics (response times, errors, game ingestion counts) in the snapshot environment.
+- **Extras:** Grafana runs at `localhost:3000`, Prometheus at `localhost:9090`, fully containerized.
+
+---
+
 ## AWS Secrets Manager
 - **Why:** Keeps DB credentials secure and out of version control.
 - **Used For:** Centralized DB secrets. Supports both local and Docker-based execution via `db_utils.py`.
@@ -38,15 +52,15 @@ This document explains the key technologies used in the KnightShift pipeline and
 ## Docker + Docker Compose
 - **Why:** Ensures consistent environments, simplifies local orchestration.
 - **Used For:**
-  - Spinning up Postgres and the pipeline together.
+  - Spinning up Postgres, Airflow, Grafana, and the pipeline together.
   - Mounting volumes (`pg_data`, `schemas/`, `logs/`).
-  - Running scripts inside containers.
+  - Running all scripts inside containers—nothing runs locally.
 
 ---
 
 ## dotenv (.env Files)
 - **Why:** Easily switch between environments.
-- **Used For:** `.env.local` for scripts, `.env.docker` for container-based runs.
+- **Used For:** `.env` for Docker Compose, `.env.pipeline` for the snapshot.
 
 ---
 
@@ -65,29 +79,20 @@ This document explains the key technologies used in the KnightShift pipeline and
 ## Folder Structure
 | Folder | Purpose |
 |--------|---------|
-| `src/` | Core scripts: ingestion, cleaning, enrichment |
+| `knightshift/` | Core scripts: ingestion, cleaning, enrichment |
+| `airflow/` | DAG definition for Airflow orchestration |
 | `schemas/` | SQL schema files auto-loaded into Postgres |
-| `config/` | Environment files (`.env.local`, `.env.docker`) |
+| `config/` | Environment files (`.env`, `.env.pipeline`) |
 | `logs/` | Captures logs from pipeline execution |
 | `tests/` | Unit tests for core logic |
 | `docs/` | Documentation + architecture notes |
-
----
-
-## Why This Stack Works
-- **Beginner-friendly but production-relevant.**
-- **Extensible toward Airflow, Kubernetes, and cloud platforms.**
-- **Secure, observable, and modular from the start.**
+| `experiments/observability_sim/` | Self-contained snapshot with observability stack |
 
 ---
 
 ## Future Tech Stack Additions (Phase 2+)
 | Tech | Role |
 |------|------|
-| Airflow | DAG-based orchestration for scheduling + monitoring |
 | Great Expectations | Data validation framework |
 | Redshift or ClickHouse | High-performance analytics/BI |
-| Prometheus + Grafana | Metrics + dashboards |
 | Kafka | Streaming ingestion |
-
----

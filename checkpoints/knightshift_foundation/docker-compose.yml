@@ -103,7 +103,7 @@ services:
     environment:
       - PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus
     depends_on:
-      - fake_pipeline  # Changed from pipeline to fake_pipeline for observability_sim
+      - fake_pipeline  # Changed from pipeline to fake_pipeline for knightshift_foundation
     networks:
       - knightshift_network
 
@@ -116,7 +116,7 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
     volumes:
-      - grafana_data:/var/lib/grafana
+      - ./grafana_backup:/var/lib/grafana
     depends_on:
       - prometheus
     networks:
@@ -131,7 +131,7 @@ services:
       dockerfile: Dockerfile
     environment:
       INSTANCE_NAME: fake_pipeline:8000
-      JOB_NAME: observability_sim
+      JOB_NAME: knightshift_foundation
     volumes:
       - ./run.sh:/app/run.sh
       - ./prometheus_metrics.py:/app/prometheus_metrics.py

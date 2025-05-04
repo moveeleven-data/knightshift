@@ -3,7 +3,7 @@
 #  Observability Sim Entry-Point
 #  This script starts the Prometheus metrics simulation server and verifies that
 #  it runs successfully. It is used inside the Docker container launched by
-#  experiments/observability_sim/docker-compose.yml.
+#  checkpoints/knightshift_foundation/docker-compose.yml.
 # ──────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 

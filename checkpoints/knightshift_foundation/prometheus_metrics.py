@@ -14,7 +14,7 @@ logging.basicConfig(
 )
 
 INSTANCE_NAME = os.getenv("INSTANCE_NAME", "fake_pipeline:8000")
-JOB_NAME = os.getenv("JOB_NAME", "observability_sim")
+JOB_NAME = os.getenv("JOB_NAME", "knightshift_foundation")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Prometheus Metrics Definitions
