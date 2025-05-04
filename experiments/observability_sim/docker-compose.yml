@@ -21,7 +21,7 @@ services:
       POSTGRES_PASSWORD: ${PGPASSWORD}
       POSTGRES_DB: ${PGDATABASE:-knightshift}
     ports:
-      - "127.0.0.1:15432:5432"  # Exposing on the host machine
+      - "127.0.0.1:15433:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ../../schemas/init:/docker-entrypoint-initdb.d
@@ -48,7 +48,7 @@ services:
     networks:
       - knightshift_network
     ports:
-      - "8000:8000"  # Exposing port 8000 for Prometheus metrics
+      - "8001:8000"  # Exposing port 8000 for Prometheus metrics
 
   # ──────────────── Apache Airflow ────────────────
   airflow:
@@ -74,7 +74,7 @@ services:
       - ../../config:/app/config
       - ../../infra/compose/.env:/opt/airflow/.env
     ports:
-      - "8080:8080"
+      - "8081:8080"
     command: >
       bash -c "
         airflow db upgrade &&
@@ -98,7 +98,7 @@ services:
     environment:
       - PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus
     depends_on:
-      - pipeline  # Ensures Prometheus starts after the pipeline container
+      - fake_pipeline  # Changed from pipeline to fake_pipeline for observability_sim
     networks:
       - knightshift_network
 
@@ -118,6 +118,24 @@ services:
       - knightshift_network
     env_file:
       - .env
+
+  # ──────────────── Fake Pipeline for Observability ────────────────
+  fake_pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      INSTANCE_NAME: fake_pipeline:8000
+      JOB_NAME: observability_sim
+    volumes:
+      - ./run.sh:/app/run.sh
+      - ./prometheus_metrics.py:/app/prometheus_metrics.py
+      - ./requirements.txt:/app/requirements.txt
+    command: ["bash", "run.sh"]
+    ports:
+      - "8000:8000"
+    networks:
+      - knightshift_network
 
 volumes:
   pg_data: {}

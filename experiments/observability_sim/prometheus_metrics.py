@@ -6,16 +6,19 @@ import signal
 import sys
 import os
 
-# Set up logging with proper format
+# ─────────────────────────────────────────────────────────────────────────────
+# Configuration and Logging
+# ─────────────────────────────────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-# Use environment variables for instance and job labels
-instance = os.getenv("INSTANCE_NAME", "pipeline:8000")  # Default to "pipeline:8000"
-job = os.getenv("JOB_NAME", "knightshift")  # Default to "knightshift"
+INSTANCE_NAME = os.getenv("INSTANCE_NAME", "fake_pipeline:8000")
+JOB_NAME = os.getenv("JOB_NAME", "observability_sim")
 
-# Define Prometheus metrics for HTTP requests and ingestion
+# ─────────────────────────────────────────────────────────────────────────────
+# Prometheus Metrics Definitions
+# ─────────────────────────────────────────────────────────────────────────────
 REQUESTS = Counter(
     "http_requests_total",
     "Total number of HTTP requests",
@@ -23,86 +26,83 @@ REQUESTS = Counter(
 )
 
 ERRORS = Counter("http_requests_errors", "Total number of HTTP request errors")
+
 REQUEST_LATENCY = Histogram(
     "http_request_duration_seconds", "Histogram for the duration of HTTP requests"
 )
 
-# New metrics for the ingestion process
 GAMES_INGESTED = Counter(
-    "games_ingested_total",
-    "Total number of games ingested from Lichess TV",
-    ["instance", "job"],
+    "games_ingested_total", "Total number of games ingested", ["instance", "job"]
 )
 
 UPDATES = Counter(
-    "games_updated_total",
-    "Total number of games updated",
-    ["instance", "job"],
+    "games_updated_total", "Total number of games updated", ["instance", "job"]
 )
 
 ADDITIONS = Counter(
-    "games_added_total",
-    "Total number of new games added",
-    ["instance", "job"],
+    "games_added_total", "Total number of new games added", ["instance", "job"]
 )
 
 INGESTION_DURATION = Histogram(
     "ingestion_duration_seconds",
-    "Histogram for the duration of the ingestion process",
+    "Histogram for simulated ingestion durations",
     ["instance", "job"],
 )
 
 
-# Define the shutdown handler for graceful termination
-def shutdown_handler(signal, frame):
-    logging.info("Shutting down gracefully...")
+# ─────────────────────────────────────────────────────────────────────────────
+# Graceful Shutdown Handler
+# ─────────────────────────────────────────────────────────────────────────────
+def shutdown_handler(signal_num, frame):
+    logging.info("Received shutdown signal. Exiting cleanly.")
     sys.exit(0)
 
 
-# Register the shutdown handler for SIGINT (Ctrl+C)
 signal.signal(signal.SIGINT, shutdown_handler)
+signal.signal(signal.SIGTERM, shutdown_handler)
 
 
-# Ensure the server starts successfully before processing
+# ─────────────────────────────────────────────────────────────────────────────
+# Start Prometheus Metrics Server
+# ─────────────────────────────────────────────────────────────────────────────
 def start_metrics_server():
     try:
-        logging.info("Starting metrics server on port 8000...")
+        logging.info("Starting Prometheus metrics server on port 8000...")
         start_http_server(8000)
-        logging.info("Metrics server started successfully.")
+        logging.info("Prometheus metrics server running.")
     except Exception as e:
         logging.error(f"Failed to start metrics server: {e}")
         sys.exit(1)
 
 
-# Ingestion simulation function
+# ─────────────────────────────────────────────────────────────────────────────
+# Simulated Ingestion Loop
+# ─────────────────────────────────────────────────────────────────────────────
 def simulate_ingestion():
     while True:
-        with REQUEST_LATENCY.time():  # Start measuring request duration
+        with REQUEST_LATENCY.time():
             try:
-                # Simulate ingestion process
-                status = "200"
-                REQUESTS.labels(status=status, instance=instance, job=job).inc()
-                GAMES_INGESTED.labels(
-                    instance=instance, job=job
-                ).inc()  # Increment the games ingested counter
+                # Simulate successful request
+                REQUESTS.labels(
+                    status="200", instance=INSTANCE_NAME, job=JOB_NAME
+                ).inc()
 
-                # Simulate adding a new game
-                ADDITIONS.labels(instance=instance, job=job).inc()
-                time.sleep(random.uniform(0.5, 2))  # Simulate varying load
+                # Simulate ingestion logic
+                GAMES_INGESTED.labels(instance=INSTANCE_NAME, job=JOB_NAME).inc()
+                ADDITIONS.labels(instance=INSTANCE_NAME, job=JOB_NAME).inc()
 
+                # Simulate variable processing time
+                time.sleep(random.uniform(0.5, 2.0))
             except Exception as e:
-                # Handle errors and increment error counter
                 ERRORS.inc()
-                logging.error(f"Error occurred during ingestion: {e}")
-                time.sleep(1)  # Sleep before retrying to avoid fast continuous errors
+                logging.error(f"Ingestion error: {e}")
+                time.sleep(1)
 
 
-# Main execution
+# ─────────────────────────────────────────────────────────────────────────────
+# Entrypoint
+# ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    try:
-        start_metrics_server()  # Start the Prometheus server before ingestion
-        logging.info("Simulating ingestion of games...")
-        simulate_ingestion()
-    except Exception as ex:
-        logging.critical(f"Unexpected error during ingestion: {ex}")
-        sys.exit(1)
+    start_metrics_server()
+    logging.info("Simulating ingestion of fake Lichess TV data...")
+    simulate_ingestion()

@@ -2,6 +2,6 @@ global:
   scrape_interval: 15s  # Scrape every 15 seconds
 
 scrape_configs:
-  - job_name: 'knightshift'
+  - job_name: 'observability_sim'
     static_configs:
-      - targets: ['pipeline:8000']  # Scrape the Python service at port 8000
+      - targets: ['fake_pipeline:8000']  # Match the service name from docker-compose.yml

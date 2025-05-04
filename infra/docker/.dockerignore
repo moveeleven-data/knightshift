@@ -1,0 +1,32 @@
+# ───────── Python cache ─────────
+__pycache__/
+*.pyc
+
+# ───────── Secrets & environments ─────────
+.env
+*.env
+infra/compose/.env
+*.db
+
+# ───────── Logs & temp files ─────────
+*.log
+logs/
+airflow/logs/
+infra/compose/airflow/logs/
+infra/compose/logs/
+infra/compose/airflow/dags/__pycache__/
+airflow/dags/__pycache__/
+
+# ───────── Git ─────────
+.git/
+.gitignore
+
+# ───────── Data, backups, notebooks ─────────
+backups/
+notebooks/
+schemas/migrations/
+
+# ───────── System & IDE metadata ─────────
+.DS_Store
+.vscode/
+.idea/
