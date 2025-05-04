@@ -3,17 +3,22 @@
 A running log of major development milestones, current state, and future plans for the KnightShift data pipeline.
          
 ---------------------------------
-
 ## May 3, 2025 - Current project state
 
-KnightShift is fully dockerized and phase-complete: Airflow orchestrates a modular DAG; Prometheus + Grafana handle real-time metrics and alerts; CI/CD runs via GitHub Actions with pytest and pre-commit hooks (black, detect-secrets). Code is structured into ingestion, cleaning, enrichment, and utils, with schema managed via versioned SQL, enforced naming, and baseline secrets tracking. The system is stable, observable, and runs end-to-end with backups, metrics, and minimal manual touch. Next: add Great Expectations, integrate Alembic, consider DAG scaling, and prep for cloud or data source expansion.
-                 
+KnightShift is fully dockerized and phase-complete: Airflow orchestrates a modular DAG; **Prometheus + Grafana simulate real-time metrics and alerts**, offering a scaffolding for observability without live data connections. CI/CD runs via GitHub Actions with pytest and pre-commit hooks (black, detect-secrets). Code is structured into ingestion, cleaning, enrichment, and utils, with schema managed via versioned SQL, enforced naming, and baseline secrets tracking. The system is stable, reproducible, and runs end-to-end with simulated monitoring, backups, and minimal manual touch. Next: add Great Expectations, integrate Alembic, consider DAG scaling, and prep for cloud or data source expansion.
+
+Note: Prometheus and Grafana are included in this project in a simulated capacity to demonstrate observability 
+concepts. In get_games_from_tv.py, Prometheus counters (e.g., games_ingested_total, games_updated_total) are instrumented and incremented during actual ingestion, but no HTTP metrics endpoint is exposed via start_http_server, meaning those metrics exist only in-memory during execution and are discarded when the script exits. A separate script, prometheus_metrics.py, launches a real Prometheus server on port 8000 and simulates ingestion by emitting mock metrics such as request durations, HTTP errors, and game counts. This script is not tied to the ingestion process and exists primarily for UI and dashboard demonstration. Although Docker Compose exposes port 8000 from the pipeline container, Prometheus can only scrape if the simulation script is actively running, which is not the case during real execution. Since the pipeline is a short-lived batch process (~1–2 minutes every 2 hours), Prometheus typically finds no available metrics to scrape.
+
+This limitation reflects a structural mismatch between Prometheus' pull-based model, which assumes long-running services, and the project’s design as a transient, Airflow-orchestrated batch pipeline. Supporting real-time observability in this context would require architectural workarounds like Prometheus Pushgateway or sidecar metric containers to persist state between runs. These solutions, while possible, introduce considerable overhead that is not warranted in this case. The existing simulated setup successfully demonstrates metric design and Grafana dashboarding without requiring full integration. It serves as a learning scaffold and can be adapted or extended in future cloud-native deployments, where observability is often handled more naturally through platform-managed monitoring tools.
+
 --------------------------------- 
 
-## May 2, 2025 – Grafana Dashboard and Prometheus Integration
-Incorporated Grafana to monitor key metrics, creating a dashboard that tracks games ingested over time, broken down by job. Metrics include the 95th percentile of request duration, total HTTP requests, HTTP requests with status 200, and the average request duration histogram. An email alert was also set up to notify when there is at least one HTTP error.
+## May 2, 2025 – Simulated Grafana Dashboard and Prometheus Integration
 
-Prometheus was successfully integrated, with key metrics tracked through the ingestion script, including HTTP request totals, errors, and latencies, as well as ingestion metrics like the number of games ingested, added, and updated. Additional metrics were configured for tracking ingestion duration and overall performance, with aggregations grouped by instance and job.
+Incorporated a **simulated Grafana dashboard** to visualize mock metrics, demonstrating how monitoring could work in production. The dashboard displays data such as games ingested over time, request duration percentiles, HTTP response counts, and simulated alerts for HTTP errors — all driven by scripted Prometheus metrics.
+
+**Prometheus was integrated in simulation mode**, exposing metrics through a standalone script not connected to the actual ingestion pipeline. Tracked values include mocked totals and latencies for HTTP requests, and ingestion metrics like the number of games ingested, added, or updated. These serve as placeholders to model what real observability might look like in a production environment.
          
 ---------------------------------    
 

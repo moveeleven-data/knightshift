@@ -34,7 +34,6 @@ from typing import Final, List, Sequence
 # ────────────────────────────────────────────────────────────────────────────────
 # Third-party imports
 # ────────────────────────────────────────────────────────────────────────────────
-from prometheus_client import Counter
 import requests
 from dotenv import load_dotenv
 from sqlalchemy import (
@@ -141,31 +140,6 @@ HTTP.headers.update(
     }
 )
 
-# ──────────────────────────────────────────────────────────────────────────
-#   Prometheus Metrics Setup (Add counters here)
-# ──────────────────────────────────────────────────────────────────────────
-instance = os.getenv("INSTANCE_NAME", "pipeline:8000")  # Default to "pipeline:8000"
-job = os.getenv("JOB_NAME", "knightshift")  # Default to "knightshift"
-
-# Prometheus Counters for game ingestion
-GAMES_INGESTED = Counter(
-    "games_ingested_total",
-    "Total number of games ingested from Lichess TV",
-    ["instance", "job"],
-)
-
-UPDATES = Counter(
-    "games_updated_total",
-    "Total number of games updated",
-    ["instance", "job"],
-)
-
-ADDITIONS = Counter(
-    "games_added_total",
-    "Total number of new games added",
-    ["instance", "job"],
-)
-
 
 # ──────────────────────────────────────────────────────────────────────────
 #   Helper functions
@@ -186,18 +160,7 @@ def _process_game_block(
     # Perform the upsert operation (insert or update)
     was_updated = upsert_game(SESSION, TV_GAMES_TBL, db_row)
 
-    # Increment the appropriate Prometheus counters
-    if was_updated:
-        UPDATES.labels(instance=instance, job=job).inc()  # Increment the update counter
-        updated.append(db_row["id_game"])
-    else:
-        ADDITIONS.labels(
-            instance=instance, job=job
-        ).inc()  # Increment the addition counter
-        added.append(db_row["id_game"])
-
-    # Increment the total games ingested counter
-    GAMES_INGESTED.labels(instance=instance, job=job).inc()
+    (updated if was_updated else added).append(db_row["id_game"])
 
 
 def _stream_channel(channel: str, added: List[str], updated: List[str]) -> None:
