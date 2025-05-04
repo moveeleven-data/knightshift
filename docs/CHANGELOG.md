@@ -22,9 +22,17 @@ metrics for UI testing or dashboard design without impacting the main pipeline.
 
 ## May 4, 2025
 
-This folder contains a standalone Prometheus + Grafana simulation environment used to test and demonstrate observability concepts **without affecting the core KnightShift pipeline**. It runs a fake ingestion service (`prometheus_metrics.py`) that emits synthetic metrics to port `8000`, which Prometheus scrapes and Grafana visualizes. The setup is designed for local, exploratory use and is decoupled from DAG execution, live data, or batch orchestration. This allows you to prototype metrics and dashboard logic without interfering with production containers.
+This folder (root/experiments/observability_sim) contains a standalone Prometheus + Grafana simulation environment 
+used to test and demonstrate observability concepts **without affecting the core KnightShift pipeline**. It runs a fake ingestion service (`prometheus_metrics.py`) that emits synthetic metrics to port `8000`, which Prometheus scrapes and Grafana visualizes. The setup is designed for local, exploratory use and is decoupled from DAG execution, live data, or batch orchestration. This allows for fast prototyping of metrics and dashboards without interfering with production containers.
 
-Today’s changes: extracted Prometheus and Grafana logic from the main KnightShift pipeline, relocated all related files into `experiments/observability_sim/`, and assigned unique ports to resolve conflicts with the main pipeline. A standalone Docker Compose file now handles the fake pipeline and observability stack, which can run alongside the production containers. The simulated pipeline uses the same schema and database but is decoupled at the service level. Run with `docker compose up` from within the `observability_sim` folder. Prometheus is accessible at [localhost:9090](http://localhost:9090) and Grafana at [localhost:3000](http://localhost:3000); a custom Grafana dashboard was created to visualize simulated ingestion metrics.
+As of May 4, 2025, I expanded this environment into a **fully self-contained snapshot of the entire KnightShift 
+pipeline**, frozen at a major working checkpoint. I copied over the complete `knightshift/` and `airflow/` folders, 
+brought in the production `docker-compose.yml` as `docker-compose.pipeline.yml`, and updated all volume paths to be 
+local. I also renamed the main `.env` to `.env.pipeline` to avoid conflicts. The snapshot now runs its own isolated 
+Postgres instance with a separate volume (`pg_data`), and I confirmed it does **not** share data with the main pipeline. It includes the real DAG, scripts, schema init files, and a working batch pipeline, but all decoupled from the production environment. Airflow runs on [localhost:8081](http://localhost:8081) (`admin` / `admin`), Prometheus on [localhost:9090](http://localhost:9090), and Grafana on [localhost:3000](http://localhost:3000) (`admin` / `admin`), with a custom dashboard pre-configured to show simulated ingestion metrics.
+
+To run the full environment (including both the observability stack and the real pipeline), navigate to this folder 
+and execute: docker compose up
 
 Added `.dockerignore` to infra/docker and /observability_sim.
 
@@ -75,7 +83,12 @@ to load environment variables properly, prioritizing container-level overrides f
 
 ## April 16, 2025 – Airflow Integration Complete
 
-We successfully transitioned the KnightShift pipeline to run fully through Apache Airflow using Docker Compose. All scripts—ingestion, cleaning, enrichment—now run as Airflow tasks, and the web UI confirms their success. Major hurdles included incorrect Docker networking (PGHOST was set to localhost instead of db), environment variable confusion, and Python version mismatches (e.g., using set[str] in Python 3.8). Debugging inside containers and streamlining the environment config made the difference. The pipeline now runs reliably under Airflow, which gives us a production-style orchestration backbone moving forward.
+Successfully transitioned the KnightShift pipeline to run fully through Apache Airflow using Docker Compose. All 
+scripts—ingestion, cleaning, enrichment—now run as Airflow tasks, and the web UI confirms their success. Major 
+hurdles included incorrect Docker networking (PGHOST was set to localhost instead of db), environment variable 
+confusion, and Python version mismatches (e.g., using set[str] in Python 3.8). Debugging inside containers and 
+streamlining the environment config made the difference. The pipeline now runs reliably under Airflow, which gives us a production-style orchestration backbone moving forward. The Airflow UI is accessible at [localhost:8080](http://localhost:8080) (`admin` / `admin`).
+
 
 ## April 12, 2025 – Fully Containerized Storage & Environment Stability
 

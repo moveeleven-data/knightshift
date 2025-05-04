@@ -22,9 +22,10 @@ services:
       POSTGRES_DB: ${PGDATABASE:-knightshift}
     ports:
       - "127.0.0.1:15433:5432"
+      - "15432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
-      - ../../schemas/init:/docker-entrypoint-initdb.d
+      - ./schemas/init:/docker-entrypoint-initdb.d
     env_file:
       - .env
     networks:
@@ -40,8 +41,10 @@ services:
     environment:
       <<: *common_env
       DATABASE_URL: postgresql+psycopg2://${PGUSER}:${PGPASSWORD}@db:5432/${PGDATABASE:-knightshift}
+      PYTHONPATH: /app
     volumes:
-      - ../../logs:/app/logs
+      - ./logs:/app/logs
+      - ./knightshift:/app/knightshift
     # command: ["bash", "scripts/run.sh"]
     env_file:
       - .env
@@ -66,13 +69,15 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
       AIRFLOW__CORE__DEFAULT_TIMEZONE: America/New_York
       RUNNING_IN_DOCKER: "true"
+      PYTHONPATH: /app
     volumes:
-      - ../../airflow/dags:/opt/airflow/dags
-      - ../../airflow/logs:/opt/airflow/logs
-      - ../../airflow/plugins:/opt/airflow/plugins
-      - ../../knightshift:/app/knightshift
-      - ../../config:/app/config
-      - ../../infra/compose/.env:/opt/airflow/.env
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+      - ./knightshift:/app/knightshift
+      # Optional: if you don't need config, omit it or bring it into snapshot
+      # - ./config:/app/config
+      - ./.env.pipeline:/opt/airflow/.env
     ports:
       - "8081:8080"
     command: >
