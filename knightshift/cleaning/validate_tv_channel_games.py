@@ -5,7 +5,6 @@ validate_tv_channel_games.py
 • Cleans / normalizes rows in **tv_channel_games**
 • Patches NULL / blank fields in **lichess_users**
 
-⚠  Pure refactor: identical behaviour, clearer structure.
 """
 
 from __future__ import annotations

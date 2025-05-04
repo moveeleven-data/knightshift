@@ -1,6 +1,6 @@
 # KnightShift Checkpoints
 
-This folder contains frozen, self-contained snapshots of the KnightShift pipeline captured at key milestones. Each checkpoint is fully runnable and isolated from the main development environment, allowing for safe testing, historical reference, and demo purposes without risk of breaking the evolving core project.
+This folder contains frozen, self-contained snapshots of the KnightShift pipeline captured at key milestones. Each checkpoint is fully runnable and isolated from the main development environment, allowing for safe testing, historical reference, and demos without affecting the evolving core project.
 
 ---
 
@@ -8,8 +8,15 @@ This folder contains frozen, self-contained snapshots of the KnightShift pipelin
 
 ### `knightshift_foundation/`  
 **Date:** May 4, 2025  
-**Description:**  
-This is the first major checkpoint and represents the foundational working version of the KnightShift pipeline. It includes the full DAG-based pipeline (ingestion → cleaning → enrichment) orchestrated via Airflow, a PostgreSQL database, and a Prometheus + Grafana observability stack with simulated metrics. All services are containerized and fully decoupled from the main project. Airflow runs on `localhost:8081`, Prometheus on `localhost:9090`, and Grafana on `localhost:3000`, with a custom dashboard in place. This snapshot preserves the working system as it existed at a major milestone before future expansions such as Kafka, streaming data, and real-time metrics.
+**Summary:**  
+The foundational working version of the KnightShift pipeline. Includes a full three-stage batch pipeline (ingestion → cleaning → enrichment) orchestrated by Airflow, an isolated PostgreSQL database, and a Prometheus + Grafana observability layer emitting simulated metrics. All services are containerized and decoupled from the main project.
+
+- DAG runs every 2 hours and completes in under 2 minutes
+- Fully isolated `.env`, volumes, and database
+- Restored Grafana dashboard included
+- Airflow at `localhost:8081`, Prometheus at `9090`, Grafana at `3000`
+
+> This snapshot preserves the first production-style version of KnightShift before future expansions like Kafka, streaming data, and cloud deployment.
 
 ---
 
