@@ -1,20 +1,8 @@
-"""
-knightshift_dag.py
-~~~~~~~~~~~~~~~~~~
-Airflow DAG that orchestrates the **KnightShift** pipeline:
-
-    1. Ingestion   `run_ingestion.py`
-    2. Cleaning    `run_cleaning.py`
-    3. Enrichment  `run_enrichment.py`
-
-The Python scripts already live inside the *pipeline* container’s image
-at **/app/src/pipeline/**, so we simply invoke them with `subprocess.run`.
-"""
-
 from __future__ import annotations
 
 import os
 import subprocess
+import psycopg2
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Final
@@ -29,9 +17,39 @@ from dotenv import load_dotenv
 ENV_FILE: Final[Path] = Path("/app/config/.env.local")  # same path in all containers
 load_dotenv(ENV_FILE, override=True)
 
-# Optional diagnostics during DAG‑parse (shown once when scheduler parses file)
-print("  DAG parse ‑ cwd:", os.getcwd())
-print("  DAG parse ‑ dir :", os.listdir())
+
+# --------------------------------------------------------------------------- #
+#   Database health check (runs every time)
+# --------------------------------------------------------------------------- #
+def check_database_health() -> None:
+    """
+    Simple check to see if the database is up and if `tv_channel_games` contains records.
+    """
+    try:
+        # Connect to PostgreSQL
+        conn = psycopg2.connect(
+            dbname="knightshift",
+            user="postgres",
+            password=os.getenv("PGPASSWORD"),
+            host="db",  # Match this with your Docker service name (db)
+            port="5432",
+        )
+        cursor = conn.cursor()
+
+        # Check if the table exists and has records
+        cursor.execute("SELECT COUNT(*) FROM tv_channel_games;")
+        record_count = cursor.fetchone()[0]
+
+        if record_count > 0:
+            print(f"Database is UP, {record_count} records found.")
+        else:
+            raise ValueError("Database is DOWN or table is empty.")
+
+        cursor.close()
+        conn.close()
+
+    except Exception as e:
+        raise ValueError(f"Database health check failed: {e}")
 
 
 # --------------------------------------------------------------------------- #
@@ -68,20 +86,26 @@ with DAG(
     dag_id="knightshift_pipeline",
     description="Ingest → Clean → Enrich Lichess TV data",
     default_args=DEFAULT_ARGS,
-    schedule_interval="0 */2 * * *",  # every 2 hours at HH:00
+    schedule_interval="0 */2 * * *",  # every 2 hours at HH:00
     start_date=datetime(2025, 4, 16),
     catchup=False,
     max_active_runs=1,
     tags=["knightshift", "chess"],
 ) as dag:
-    # ── 1) Ingest  ────────────────────────────────────────────────────────── #
+    # ── 1) Database Health Check ─────────────────────────────────────────── #
+    database_health_check = PythonOperator(
+        task_id="check_database_health", python_callable=check_database_health
+    )
+
+    # ── 2) Ingest  ────────────────────────────────────────────────────────── #
     ingest_tv_games = _make_task("ingest_tv_games", "run_ingestion.py")
 
-    # ── 2) Clean   ────────────────────────────────────────────────────────── #
+    # ── 3) Clean   ────────────────────────────────────────────────────────── #
     clean_invalid_games = _make_task("clean_invalid_games", "run_cleaning.py")
 
-    # ── 3) Enrich  ────────────────────────────────────────────────────────── #
+    # ── 4) Enrich  ────────────────────────────────────────────────────────── #
     enrich_game_data = _make_task("enrich_game_data", "run_enrichment.py")
 
-    # Task‑ordering (T1 → T2 → T3)
-    ingest_tv_games >> clean_invalid_games >> enrich_game_data
+    # Task‑ordering (database check → ingest → clean → enrich)
+    # If `check_database_health` fails, it will stop the rest of the pipeline
+    database_health_check >> ingest_tv_games >> clean_invalid_games >> enrich_game_data

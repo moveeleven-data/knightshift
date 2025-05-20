@@ -2,6 +2,26 @@ Project Progress – KnightShift
 
 A running log of major development milestones, current state, and future plans for the KnightShift data pipeline.
 
+## May 20, 2025
+
+Alembic Integration Attempt:
+Attempted to integrate Alembic for schema migrations in the KnightShift project
+but encountered numerous issues related to migrations, revisions, and
+configurations, particularly in the Dockerized Airflow pipeline. Despite
+multiple manual fixes, Alembic proved inefficient and unsuitable for the setup.
+
+Pivot to Simpler Solution:
+Decided against using Great Expectations and dbt for data validation and
+transformation. Instead, focused on enhancing the existing Airflow DAG by
+implementing a robust database health check. This ensures that the DAG will
+not continue to attempt data ingestion or writing if the database is not in a
+healthy state, effectively preventing unnecessary pipeline execution.
+
+Outcome:
+This approach simplifies the pipeline, avoiding unnecessary complexity while
+ensuring that the process only continues when the database is ready and functional.
+
+
 ✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦✧✦
 
 # Checkpoint Reached → knightshift_foundation (observability sim)
