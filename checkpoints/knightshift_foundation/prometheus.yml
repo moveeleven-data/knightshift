@@ -1,7 +1,0 @@
-global:
-  scrape_interval: 15s  # Scrape every 15 seconds
-
-scrape_configs:
-  - job_name: 'knightshift_foundation'
-    static_configs:
-      - targets: ['fake_pipeline:8000']  # Match the service name from docker-compose.yml

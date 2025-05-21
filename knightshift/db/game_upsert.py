@@ -19,7 +19,6 @@ from knightshift.utils.logging_utils import setup_logger
 
 LOGGER = setup_logger("game_upsert")
 
-
 # ═══════════════════════════════════════════════
 # Parsing helpers
 # ═══════════════════════════════════════════════

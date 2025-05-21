@@ -2,6 +2,50 @@ Project Progress – KnightShift
 
 A running log of major development milestones, current state, and future plans for the KnightShift data pipeline.
 
+## May 21, 2025
+
+Today, I confirmed the stable startup of the Flask API container, ensuring full
+database integration and live routes. In the process, I removed the experimental
+pg8000 support and reverted to psycopg2, prioritizing reliability and
+compatibility across Flask, SQLAlchemy, and Airflow. I also added a minimal
+HTML-serving layer for health checks and metrics monitoring, setting the
+foundation for future enhancements. Automatic database initialization and
+Airflow user creation were successfully configured through the
+`airflow db migrate` and `user bootstrap` commands in the Docker Compose setup.
+Looking ahead, a clean and user-friendly metrics dashboard is in the pipeline
+for further development.
+
+Additionally, I finalized the Flask API integration with the KnightShift project,
+marking the completion of the Flask-serving layer. The application now includes
+real-time metrics displaying game statistics and player data through clean,
+responsive HTML templates. I optimized the routes for games, players, and
+metrics, ensuring efficient dynamic data fetching with pagination and filtering.
+Notable improvements include the addition of detailed player statistics,
+game history, and ratings across multiple formats, alongside tracking the most
+popular game openings. The system now uses SQLAlchemy and psycopg2 for stable
+database interactions, with comprehensive session and error logging. This marks
+the conclusion of the Flask API development chapter, focusing on stability and
+scalability, and setting the stage for future project enhancements.
+
+---
+
+## May 20, 2025
+
+### [flask-api] Compatibility Fixes, Refactor, and Stability Pass
+
+Resolved deep Flask compatibility issues blocking Airflow boot: downgraded
+`flask==2.0.2` and `werkzeug==2.0.2` to align with Airflow 2.8.1 constraints
+(was failing due to deprecated `flask.json.provider`). Replaced broken
+`auth_manager` values (`None`, `FabAuthManager`, etc.) with valid
+`airflow.auth.managers.fab.fab_auth_manager.FabAuthManager` path. Rebuilt
+Docker images with pinned constraints and verified clean startup. Flask API
+container is healthy and stable.
+
+Next: finalize route validations, add response schema handling, and test DB
+integration with pg8000 in a real DAG context.
+
+---
+
 ## May 20, 2025
 
 Alembic Integration Attempt:

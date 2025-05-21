@@ -75,12 +75,12 @@ def load_db_credentials(
 
 def get_database_url(creds: Dict[str, str]) -> str:
     """
-    Build a SQLAlchemy URL **pg8000 driver** string from the creds dict.
+    Build a SQLAlchemy URL **psycopg2 driver** string from the creds dict.
     Example:
-       postgresql+pg8000://postgres:postgres@localhost:5432/knightshift
+       postgresql+psycopg2://postgres:postgres@localhost:5432/knightshift
     """
     return (
-        "postgresql+pg8000://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}"
+        "postgresql+psycopg2://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}"
     ).format(
         PGUSER=creds["PGUSER"],
         PGPASSWORD=creds["PGPASSWORD"],

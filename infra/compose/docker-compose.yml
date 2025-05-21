@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.8"
 
 x-common-env: &common_env
   PGHOST:     ${PGHOST}
@@ -12,7 +12,6 @@ x-common-env: &common_env
   LICHESS_TOKEN: ${LICHESS_TOKEN}
 
 services:
-  # ──────────────── Postgres ────────────────
   db:
     image: postgres:17
     restart: always
@@ -21,7 +20,7 @@ services:
       POSTGRES_PASSWORD: ${PGPASSWORD}
       POSTGRES_DB: ${PGDATABASE:-knightshift}
     ports:
-      - "127.0.0.1:15432:5432"  # Exposing on the host machine
+      - "127.0.0.1:15432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ../../schemas/init:/docker-entrypoint-initdb.d
@@ -30,7 +29,21 @@ services:
     networks:
       - knightshift_network
 
-  # ──────────────── KnightShift Pipeline ────────────────
+  flask-api:
+    build:
+      context: ../../flask_api
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${PGUSER}:${PGPASSWORD}@db:5432/${PGDATABASE:-knightshift}
+    volumes:
+      - ../../flask_api:/app
+    networks:
+      - knightshift_network
+
   pipeline:
     build:
       context: ../..
@@ -42,24 +55,23 @@ services:
       DATABASE_URL: postgresql+psycopg2://${PGUSER}:${PGPASSWORD}@db:5432/${PGDATABASE:-knightshift}
     volumes:
       - ../../logs:/app/logs
-    # command: ["bash", "scripts/run.sh"]
     env_file:
       - .env
     networks:
       - knightshift_network
-#    ports:
-#      - "8000:8000"  # Exposing port 8000 for Prometheus metrics
 
-  # ──────────────── Apache Airflow ────────────────
   airflow:
     build:
       context: ../..
       dockerfile: infra/docker/airflow.Dockerfile
     restart: always
-    depends_on: [db]
+    depends_on:
+      - db
     environment:
       <<: *common_env
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${PGUSER}:${PGPASSWORD}@db:5432/${PGDATABASE:-knightshift}
+      AIRFLOW__DATABASE__EXECUTEMANY_MODE: batch
+      AIRFLOW__CORE__AUTH_MANAGER: airflow.auth.managers.fab.fab_auth_manager.FabAuthManager
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY}
       AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "False"
@@ -76,12 +88,19 @@ services:
     ports:
       - "8080:8080"
     command: >
-      bash -c "
-        airflow db upgrade &&
+      bash -c '
+        if [ ! -f "/opt/airflow/airflow.db-initialized" ]; then
+          echo "First-time DB init...";
+          airflow db init &&
+          touch /opt/airflow/airflow.db-initialized
+        else
+          echo "Migrating existing DB...";
+          airflow db upgrade
+        fi &&
         airflow users create -u admin -p admin -f admin -l admin -r Admin -e admin@example.com || true &&
         airflow scheduler & 
         exec airflow webserver --host 0.0.0.0 --port 8080
-      "
+      '
     env_file:
       - .env
     networks:

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KnightShift API</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Prevent page overflow */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #FAFAFA; /* Light grey background for a clean, modern look */
+            font-family: 'Inter', sans-serif;
+            color: #4A4A4A; /* Dark grey text for readability */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            overflow: hidden;
+            visibility: hidden; /* Initially hide the content */
+            opacity: 0; /* Start with 0 opacity */
+            transition: opacity 0.5s ease-in-out; /* Smooth transition to reveal content */
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 60px auto;
+            padding: 0 15px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1); /* Softer shadow for modern feel */
+            background-color: #FFFFFF;
+            padding: 30px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .card-header {
+            background-color: #2C3E50; /* Deep navy blue for professionalism */
+            color: #ECF0F1; /* Light text for contrast */
+            text-align: center;
+            padding: 50px;
+            border-radius: 16px 16px 0 0;
+            margin-bottom: 40px;
+        }
+
+        .card-header h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .logo-img {
+            width: 120px;
+            height: auto;
+            margin: 0 auto 20px;
+            display: block;
+        }
+
+        .lead {
+            font-size: 1.5rem;
+            color: #7F8C8D; /* Muted grey text for a sophisticated tone */
+            text-align: center;
+            margin-bottom: 40px;
+            line-height: 1.6;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        ul.list-group {
+            margin-top: 30px;
+            text-align: left;
+            padding-left: 0;
+        }
+
+        ul.list-group li {
+            border: none;
+            padding: 20px 30px;
+            font-size: 1.25rem;
+            background-color: #FFFFFF;
+            border-left: 5px solid #3498DB; /* Subtle blue accent for a modern look */
+            margin-bottom: 18px;
+            border-radius: 10px;
+            transition: all 0.2s ease-in-out; /* Slightly shorter transition for a more subtle effect */
+        }
+
+        ul.list-group li:hover {
+            background-color: #E9ECEF; /* Light grey background on hover */
+            transform: scale(1.02); /* Reduced scaling for a subtler hover effect */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Softer shadow effect */
+        }
+
+        ul.list-group li a {
+            text-decoration: none;
+            color: #2C3E50;
+            font-weight: 600;
+        }
+
+        ul.list-group li a:hover {
+            text-decoration: underline;
+            color: #2980B9; /* Blue highlight for links */
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-color: #2980B9; /* Strong blue for the CTA button */
+            color: white;
+            font-weight: 600;
+            padding: 16px 32px;
+            border-radius: 10px;
+            margin-top: 35px;
+            font-size: 1.2rem;
+            text-decoration: none;
+            text-align: center;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        .cta-button:hover {
+            background-color: #1A5276; /* Darker blue on hover for smooth effect */
+        }
+
+        /* Pop-up effect for list items */
+        ul.list-group li:hover {
+            transform: scale(1.02); /* More subtle scaling */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Softer shadow */
+        }
+
+        /* Media queries for better responsiveness */
+        @media (max-width: 768px) {
+            .card-header h1 {
+                font-size: 2.2rem;
+            }
+
+            .lead {
+                font-size: 1.3rem;
+            }
+
+            .logo-img {
+                width: 100px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .card-body {
+                padding: 20px;
+            }
+
+            .logo-img {
+                width: 80px;
+                margin-bottom: 15px;
+            }
+
+            .card-header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <img src="{{ url_for('static', filename='images/ks_logo.jpg') }}" alt="KnightShift Logo" class="logo-img">
+                <h1>Welcome to the KnightShift API</h1>
+            </div>
+            <div class="card-body">
+                <p class="lead">The KnightShift API provides real-time chess game data sourced from Lichess TV. Explore metrics, games, and player information.</p>
+
+                <ul class="list-group">
+                    <li class="list-group-item"><a href="/metrics">/metrics</a> – View real-time metrics</li>
+                    <li class="list-group-item"><a href="/games">/games</a> – Access game data</li>
+                    <li class="list-group-item"><a href="/players">/players</a> – View all players</li>
+                </ul>
+
+                <a href="metrics" class="cta-button">Explore Now</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Wait for everything to load before displaying the page content
+        window.onload = function() {
+            document.body.style.visibility = 'visible'; // Make the body visible
+            document.body.style.opacity = 1; // Fade in the content
+        };
+    </script>
+</body>
+</html>

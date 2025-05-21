@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KnightShift Metrics</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    /* Header Styles */
+    .card-header {
+      background-color: #2C6B2F; /* Darker green for a professional look */
+      color: white;
+      padding-top: 20px;
+      padding-bottom: 20px;
+      text-align: center;
+      display: flex;
+      justify-content: center; /* Center the title */
+      align-items: center; /* Vertically align elements */
+      position: relative;
+    }
+
+    .card-header h1 {
+      font-weight: bold;
+      margin-right: 70px; /* Adjust margin to move the title slightly to the left */
+    }
+
+    /* Home Button Styles */
+    .home-button {
+      font-size: 2rem; /* Double the size of the icon */
+      cursor: pointer;
+      position: absolute;
+      right: 20px; /* Position the button to the right, but a bit away from the edge */
+    }
+
+    /* Body Section */
+    .card-body {
+      background-color: white;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Subtle shadow for the card */
+      border-radius: 16px; /* Rounded corners */
+      padding: 20px;
+    }
+
+    .metric {
+      font-size: 1.2rem;
+      line-height: 1.6;
+      color: #4A4A4A; /* Darker text for better readability */
+    }
+
+    /* Metric Styles */
+    .metric strong {
+      font-weight: 700;
+      font-size: 1.5rem;
+    }
+
+    /* Top Openings Section */
+    #mostPlayedOpenings {
+      margin-top: 20px;
+    }
+    #mostPlayedOpenings li {
+      background-color: #F4F6F6; /* Light background for the opening list */
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 5px;
+      font-size: 1.2rem;
+    }
+
+    /* Color Scheme */
+    body {
+      background-color: #F5F5F5; /* Slightly darker grey background */
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+      .card-body {
+        padding: 15px;
+      }
+      .metric {
+        font-size: 1.1rem;
+      }
+      #mostPlayedOpenings li {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+  <script>
+    function fetchMetrics() {
+      fetch('/api/metrics')
+        .then(r => r.json())
+        .then(data => {
+          if (data.error) {
+            document.getElementById('metricsContent').innerHTML = `<p>Error fetching metrics. Please try again later.</p>`;
+            return;
+          }
+
+          // Update overall statistics
+          document.getElementById('totalGames').innerText = data.total_games;
+          document.getElementById('totalPlayers').innerText = data.total_players;
+
+          // Update the top player details (name, profile link, total games, title)
+          document.getElementById('topPlayer').innerHTML = `${data.top_player} (<a href="${data.top_player_url}" target="_blank">Profile</a>)`;
+          document.getElementById('topPlayerGames').innerText = data.top_player_games;
+          document.getElementById('topPlayerTitle').innerText = data.top_player_title;
+
+          // Generate HTML for top 3 most played openings
+          let openingsHtml = '';
+          for (let i = 0; i < 3; i++) {
+            const openingName = data.most_played_openings[i] || "Unknown Opening";  // Ensure we have data
+            openingsHtml += `
+              <li><strong>${openingName}</strong></li>
+            `;
+          }
+
+          // Display the list of top 3 most played openings
+          document.getElementById('mostPlayedOpenings').innerHTML = `<ol>${openingsHtml}</ol>`;
+        })
+        .catch(err => {
+          console.log('Error fetching metrics:', err);
+          document.getElementById('metricsContent').innerHTML = '<p>Error fetching metrics. Please try again later.</p>';
+        });
+    }
+
+    // Fetch metrics on page load and then periodically (every minute)
+    window.onload = fetchMetrics;
+    setInterval(fetchMetrics, 60000); // Refresh every 60 seconds
+  </script>
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="card">
+      <div class="card-header">
+        <!-- Home Button -->
+        <a href="/" class="home-button">
+          <img src="{{ url_for('static', filename='images/home1.png') }}" alt="Home Icon" style="width: 60px; height: 60px;"> <!-- Slightly smaller size -->
+        </a>
+        <h1>KnightShift API Metrics</h1>
+      </div>
+      <div class="card-body" id="metricsContent">
+        <p class="metric">Total Games: <strong id="totalGames">{{ total_games }}</strong></p>
+        <p class="metric">Total Players: <strong id="totalPlayers">{{ total_players }}</strong></p>
+        <p class="metric">Most Active Player: <strong id="topPlayer">{{ top_player }}</strong></p>
+        <p class="metric">Total Games:
+          <strong id="topPlayerGames">{{ top_player_games }}</strong></p>
+        <p class="metric">Title: <strong id="topPlayerTitle">{{ top_player_title }}</strong></p>
+        <p class="metric">Top 3 Most Played Openings:</p>
+        <div id="mostPlayedOpenings"></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

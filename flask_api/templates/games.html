@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event & Game Statistics</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* General Body Styling */
+        body {
+            background-color: #FAFAFA; /* Light Grey */
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            visibility: hidden; /* Initially hide the content */
+            opacity: 0; /* Start with 0 opacity */
+            transition: opacity 0.5s ease-in-out; /* Smooth transition to reveal content */
+        }
+
+        /* Header and Home Button */
+        .header {
+            background-color: #2C3E50; /* Navy Blue */
+            color: white; /* Light Grey Text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px 20px;
+        }
+
+        .home-btn {
+            font-size: 1.25rem;
+            color: white; /* Light Grey Text */
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+        }
+
+        .home-btn:hover {
+            text-decoration: underline;
+        }
+
+        .home-btn i {
+            margin-right: 8px;
+        }
+
+        /* Card Styling */
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            background-color: #FFFFFF; /* White Card Background */
+        }
+
+        .card-header {
+            background-color: #2C3E50; /* Navy Blue */
+            color: white; /* Light Grey Text */
+            font-size: 1.6rem;
+            font-weight: 700;
+            padding: 18px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+        }
+
+        .card-body {
+            padding: 20px;
+            color: #4A4A4A; /* Dark Grey Text */
+        }
+
+        /* Table Styling */
+        .table {
+            font-size: 1.1rem;
+            width: 100%;
+            margin-bottom: 1rem;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table th, .table td {
+            text-align: center;
+            vertical-align: middle;
+            padding: 18px;
+            border: 1px solid #ddd;
+            color: #4A4A4A; /* Dark Grey Text */
+        }
+
+        .table th {
+            background-color: #2C3E50; /* Navy Blue */
+            color: white;
+            font-size: 1.2rem;
+            width: 25%;
+        }
+
+        .table td {
+            width: 25%;
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .table tbody tr:nth-child(odd) {
+            background-color: #FFFFFF;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background-color: #ECF0F1; /* Light Grey */
+        }
+
+        /* Table Hover Effect - Subtle */
+        .table tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .table td a {
+            color: #3498DB; /* Blue Links */
+        }
+
+        .table td a:hover {
+            color: #2980B9; /* Blue Hover */
+            text-decoration: underline;
+        }
+
+        /* Button Styling */
+        .btn {
+            background-color: #2980B9; /* Stronger Blue (CTA) */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #1A5276; /* Darker Blue */
+            transform: scale(1.05);
+        }
+
+        .btn:active {
+            background-color: #1A5276; /* Darker Blue on Click */
+        }
+
+        /* Pagination Styling */
+        .pagination {
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .pagination a {
+            color: #2C3E50; /* Navy Blue for Pagination Links */
+        }
+
+        .pagination .disabled a {
+            color: #ccc;
+        }
+
+        .pagination .active a {
+            font-weight: bold;
+        }
+
+        /* Mobile Optimization */
+        @media (max-width: 768px) {
+            .table td, .table th {
+                padding: 12px;
+            }
+
+            .table {
+                font-size: 1rem;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .home-btn {
+                margin-bottom: 10px;
+            }
+        }
+
+        /* Tooltip Styling */
+        .tooltip-inner {
+            background-color: #2980B9; /* Blue Tooltip */
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with Home Button -->
+    <div class="header">
+        <a href="/" class="home-btn">
+            <i class="fas fa-home"></i>Home
+        </a>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Card for Game Data -->
+        <div class="card">
+            <div class="card-header">
+                Game Results
+            </div>
+            <div class="card-body">
+                <!-- Table -->
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Game ID</th>
+                            <th>Event Name</th>
+                            <th>Result</th>
+                            <th>Game Link</th> <!-- New Column for Game Link -->
+                        </tr>
+                    </thead>
+                    <tbody id="gameTable">
+                        {% for game in games %}
+                        <tr>
+                            <td>{{ game.id_game }}</td>
+                            <td>{{ game.val_event_name }}</td>
+                            <td>{{ game.val_result }}</td>
+                            <td><a href="{{ game.val_site_url }}" target="_blank">View Game</a></td> <!-- Link to the game -->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- Pagination Control -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <!-- Row Count Selector -->
+                    <div>
+                        <label for="rowCountSelect">Rows per page:</label>
+                        <select id="rowCountSelect" class="form-control w-auto">
+                            <option value="5">5</option> <!-- Fewer rows -->
+                            <option value="15">15</option> <!-- Fewer rows -->
+                            <option value="30">30</option> <!-- Fewer rows -->
+                        </select>
+                    </div>
+
+                    <!-- Pagination Buttons -->
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item" id="firstPage">
+                                <a class="page-link" href="#">First</a>
+                            </li>
+                            <li class="page-item" id="prevPage">
+                                <a class="page-link" href="#">Previous</a>
+                            </li>
+                            <li class="page-item" id="nextPage">
+                                <a class="page-link" href="#">Next</a>
+                            </li>
+                            <li class="page-item" id="lastPage">
+                                <a class="page-link" href="#">Last</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS, Popper.js, and jQuery for Tooltip functionality -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- FontAwesome for Home Icon -->
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+
+    <!-- Pagination Logic -->
+    <script>
+        $(document).ready(function() {
+            const rowsPerPageOptions = [5, 15, 30]; // Reduced rows per page
+            let currentPage = 1;
+            let rowsPerPage = 5; // Default to 5 rows
+
+            // Function to display table data for current page
+            function displayTableData() {
+                const rows = $('#gameTable tr');
+                const totalRows = rows.length;
+                const totalPages = Math.ceil(totalRows / rowsPerPage);
+
+                // Calculate start and end row for the current page
+                const startRow = (currentPage - 1) * rowsPerPage;
+                const endRow = Math.min(startRow + rowsPerPage, totalRows);
+
+                // Show only the rows for the current page
+                rows.each(function(index, row) {
+                    if (index >= startRow && index < endRow) {
+                        $(row).show();
+                    } else {
+                        $(row).hide();
+                    }
+                });
+
+                // Update pagination buttons
+                $('#firstPage').toggleClass('disabled', currentPage === 1);
+                $('#prevPage').toggleClass('disabled', currentPage === 1);
+                $('#nextPage').toggleClass('disabled', currentPage === totalPages);
+                $('#lastPage').toggleClass('disabled', currentPage === totalPages);
+            }
+
+            // Event listener for row count selection
+            $('#rowCountSelect').change(function() {
+                rowsPerPage = parseInt($(this).val());
+                currentPage = 1;
+                displayTableData();
+            });
+
+            // Pagination buttons click events
+            $('#firstPage').click(function() {
+                currentPage = 1;
+                displayTableData();
+            });
+
+            $('#prevPage').click(function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displayTableData();
+                }
+            });
+
+            $('#nextPage').click(function() {
+                const totalRows = $('#gameTable tr').length;
+                const totalPages = Math.ceil(totalRows / rowsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displayTableData();
+                }
+            });
+
+            $('#lastPage').click(function() {
+                currentPage = Math.ceil($('#gameTable tr').length / rowsPerPage);
+                displayTableData();
+            });
+
+            // Initialize the table data
+            displayTableData();
+
+            // After the table is initialized, make the whole page visible with fade-in effect
+            $('body').css('visibility', 'visible');
+            $('body').css('opacity', 1);  // Fade in the content
+        });
+    </script>
+</body>
+</html>
