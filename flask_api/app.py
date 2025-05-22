@@ -1,7 +1,9 @@
-from flask import Flask, jsonify, render_template, session
+from flask import Flask, jsonify, render_template, session, Response
 from flask_sqlalchemy import SQLAlchemy
 import os
 import logging
+import csv
+from io import StringIO
 from sqlalchemy import func
 
 # Flask app configuration
@@ -86,16 +88,31 @@ class Player(db.Model):
     __tablename__ = "lichess_users"
     id_user = db.Column(db.String, primary_key=True)
     val_username = db.Column(db.String)
-    val_rating_classical = db.Column(db.Integer)
-    val_rating_rapid = db.Column(db.Integer)
-    val_rating_blitz = db.Column(db.Integer)
-    val_rating_bullet = db.Column(db.Integer)
-    n_games_all = db.Column(db.Integer)
-    n_games_win = db.Column(db.Integer)
-    n_games_loss = db.Column(db.Integer)
-    n_games_draw = db.Column(db.Integer)
-    val_url = db.Column(db.Text)  # URL for the Lichess profile
     val_title = db.Column(db.String(10), nullable=True)
+    val_real_name = db.Column(db.String, nullable=True)
+    val_location = db.Column(db.String, nullable=True)
+    val_bio = db.Column(db.Text, nullable=True)
+    val_url = db.Column(db.String, nullable=True)
+    val_rating_fide = db.Column(db.Integer, nullable=True)
+    val_rating_uscf = db.Column(db.Integer, nullable=True)
+    val_rating_bullet = db.Column(db.Integer, nullable=True)
+    val_rating_blitz = db.Column(db.Integer, nullable=True)
+    val_rating_classical = db.Column(db.Integer, nullable=True)
+    val_rating_rapid = db.Column(db.Integer, nullable=True)
+    val_rating_chess960 = db.Column(db.Integer, nullable=True)
+    val_rating_ultra_bullet = db.Column(db.Integer, nullable=True)
+    val_country_code = db.Column(db.String(20), nullable=True)
+    tm_created = db.Column(db.BigInteger)
+    tm_seen = db.Column(db.BigInteger)
+    n_playtime_total = db.Column(db.Integer, nullable=True)
+    n_playtime_tv = db.Column(db.Integer, nullable=True)
+    n_games_all = db.Column(db.Integer, nullable=True)
+    n_games_rated = db.Column(db.Integer, nullable=True)
+    n_games_win = db.Column(db.Integer, nullable=True)
+    n_games_loss = db.Column(db.Integer, nullable=True)
+    n_games_draw = db.Column(db.Integer, nullable=True)
+    ind_patron = db.Column(db.Boolean, nullable=True)
+    ind_streaming = db.Column(db.Boolean, nullable=True)
 
 
 @app.route("/", methods=["GET"])
@@ -114,7 +131,137 @@ def get_games():
 @app.route("/players", methods=["GET"])
 def get_all_players():
     players = Player.query.order_by(Player.val_username.asc()).all()
+
+    # Ensure each player has a valid URL
+    for player in players:
+        if not player.val_url:
+            player.val_url = f"https://lichess.org/@/{player.val_username}"
+
     return render_template("players.html", players=players)
+
+
+@app.route("/export_csv", methods=["GET"])
+def export_csv():
+    # Query all players from the database
+    players = Player.query.all()
+
+    # Create a CSV in memory
+    output = StringIO()
+    writer = csv.writer(output)
+
+    # Write the header row
+    writer.writerow(
+        [
+            "Username",
+            "Title",
+            "Real Name",
+            "Location",
+            "Bio",
+            "FIDE Rating",
+            "USCF Rating",
+            "Bullet Rating",
+            "Blitz Rating",
+            "Classical Rating",
+            "Rapid Rating",
+            "Chess960 Rating",
+            "Ultra Bullet Rating",
+            "Country",
+            "Profile URL",
+            "Total Games",
+            "Games Won",
+            "Games Lost",
+            "Games Drawn",
+            "Patron",
+            "Streaming",
+        ]
+    )
+
+    # Write data rows
+    for player in players:
+        writer.writerow(
+            [
+                player.val_username,
+                player.val_title if player.val_title else "N/A",
+                player.val_real_name if player.val_real_name else "N/A",
+                player.val_location if player.val_location else "N/A",
+                player.val_bio if player.val_bio else "N/A",
+                player.val_rating_fide if player.val_rating_fide else "N/A",
+                player.val_rating_uscf if player.val_rating_uscf else "N/A",
+                player.val_rating_bullet if player.val_rating_bullet else "N/A",
+                player.val_rating_blitz if player.val_rating_blitz else "N/A",
+                player.val_rating_classical if player.val_rating_classical else "N/A",
+                player.val_rating_rapid if player.val_rating_rapid else "N/A",
+                player.val_rating_chess960 if player.val_rating_chess960 else "N/A",
+                (
+                    player.val_rating_ultra_bullet
+                    if player.val_rating_ultra_bullet
+                    else "N/A"
+                ),
+                player.val_country_code if player.val_country_code else "N/A",
+                player.val_url if player.val_url else "N/A",
+                player.n_games_all if player.n_games_all else "N/A",
+                player.n_games_win if player.n_games_win else "N/A",
+                player.n_games_loss if player.n_games_loss else "N/A",
+                player.n_games_draw if player.n_games_draw else "N/A",
+                player.ind_patron if player.ind_patron else "N/A",
+                player.ind_streaming if player.ind_streaming else "N/A",
+            ]
+        )
+
+    # Return the CSV file as a response with a download header
+    output.seek(0)
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=lichess_users.csv"},
+    )
+
+
+@app.route("/export_all_csv", methods=["GET"])
+def export_all_csv():
+    # Query all games from the tv_channel_games table
+    games = Game.query.all()
+
+    # Create a CSV in memory
+    output = StringIO()
+    writer = csv.writer(output)
+
+    # Write the header row
+    writer.writerow(
+        [
+            "Game ID",
+            "Event Name",
+            "White Player ID",
+            "Black Player ID",
+            "Result",
+            "Opening Name",
+            "Opening ECO Code",
+            "Game URL",
+        ]
+    )
+
+    # Write data rows
+    for game in games:
+        writer.writerow(
+            [
+                game.id_game,
+                game.val_event_name,
+                game.id_user_white,
+                game.id_user_black,
+                game.val_result,
+                game.val_opening_name,
+                game.val_opening_eco_code,
+                game.val_site_url,
+            ]
+        )
+
+    # Return the CSV file as a response with a download header
+    output.seek(0)
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=all_games.csv"},
+    )
 
 
 @app.route("/metrics", methods=["GET"])
@@ -126,8 +273,9 @@ def metrics():
     # Step 1: Get total games and valid players
     total_games = Game.query.count()
     total_players = Player.query.filter(
-        Player.val_username.notlike("%anonymous%"),
-        Player.n_games_all <= 300000,  # Exclude players with more than 300,000 games
+        Player.val_username.notin_(["Anonymous", "BOT", "N/A"]),
+        Player.val_username != "",  # Exclude empty usernames
+        Player.val_real_name != "",  # Exclude empty real names
     ).count()
 
     app.logger.debug(
@@ -138,20 +286,22 @@ def metrics():
     top_player = (
         db.session.query(Player.val_username, Player.n_games_all, Player.val_url)
         .filter(
-            Player.val_username.notlike("%anonymous%"), Player.n_games_all <= 300000
+            Player.val_username.notin_(["Anonymous", "BOT", "N/A"]),
+            Player.val_username != "",  # Ensure player is not empty
+            Player.val_real_name != "",  # Ensure player real name is not empty
         )
         .order_by(Player.n_games_all.desc())
         .first()  # Get the player with the most games
     )
 
-    # Debugging the top player fetched
-    app.logger.debug(f"Top Player Query Result: {top_player}")
-
-    # Check if the top player is valid and log it
-    top_player_name = top_player[0] if top_player else "N/A"
-    top_player_url = top_player[2] if top_player else "#"
-
-    app.logger.debug(f"Final Top Player: {top_player_name}, URL: {top_player_url}")
+    if not top_player:
+        top_player_name = "N/A"
+        top_player_url = "#"
+        top_player_games = 0
+    else:
+        top_player_name = top_player[0]
+        top_player_url = top_player[2]
+        top_player_games = top_player[1]
 
     # Step 3: Get the top 3 most played ECO codes (distinct)
     most_played_eco = (
@@ -166,26 +316,19 @@ def metrics():
         )
         .group_by(Game.val_opening_eco_code)
         .order_by(func.count(Game.val_opening_eco_code).desc())
-        .limit(10)  # Increase the limit to make sure we get enough data to filter later
+        .limit(3)  # Limit to top 3
         .all()
     )
 
-    # Using a set to store unique openings
     unique_openings = set()
     most_played_openings = []
 
-    # Loop through the results to add unique descriptions
     for eco, _ in most_played_eco:
         eco_description = eco_descriptions.get(eco[:2], "Unknown Opening")
         if eco_description not in unique_openings:
             unique_openings.add(eco_description)
             most_played_openings.append(eco_description)
 
-        # Stop once we have 3 unique openings
-        if len(most_played_openings) >= 3:
-            break
-
-    # If fewer than three unique openings, pad with "Unknown Opening"
     while len(most_played_openings) < 3:
         most_played_openings.append("Unknown Opening")
 
@@ -198,104 +341,84 @@ def metrics():
         total_players=total_players,
         top_player=top_player_name,
         top_player_url=top_player_url,
+        top_player_games=top_player_games,
         most_played_openings=most_played_openings,
     )
 
 
 @app.route("/api/metrics", methods=["GET"])
 def api_metrics():
-    try:
-        # Total games and players
-        total_games = Game.query.count()
-        total_players = Player.query.filter(
-            Player.val_username.notlike("%anonymous%")
-        ).count()  # Exclude anonymous players
+    # Step 1: Get total games and valid players
+    total_games = Game.query.count()
+    total_players = Player.query.filter(
+        Player.val_username != "Anonymous",  # Exclude players named "Anonymous"
+        Player.val_title != "BOT",  # Exclude players with title "BOT"
+    ).count()
 
-        # Fetch the top player (player with the most games played excluding 'anonymous' players)
-        top_player = (
-            db.session.query(
-                Player.val_username,
-                Player.n_games_all,
-                Player.val_title,
-                Player.val_url,
-            )
-            .filter(
-                Player.val_username.notlike("%Anonymous%")
-            )  # Exclude 'anonymous' players
-            .order_by(Player.n_games_all.desc())
-            .first()
+    # Step 2: Get the true most active player (the one with the highest number of games)
+    top_player = (
+        db.session.query(
+            Player.val_username, Player.n_games_all, Player.val_url, Player.val_title
         )
-
-        # If the top player is anonymous, skip to the next valid player
-        if top_player and "Anonymous" in top_player[0].lower():
-            top_player = (
-                db.session.query(
-                    Player.val_username,
-                    Player.n_games_all,
-                    Player.val_title,
-                    Player.val_url,
-                )
-                .filter(Player.val_username.notlike("%Anonymous%"))
-                .order_by(Player.n_games_all.desc())
-                .offset(1)  # Skip the first (anonymous) player
-                .first()
-            )
-
-        # Extract player details
-        top_player_name = top_player[0] if top_player else "N/A"
-        top_player_games = top_player[1] if top_player else 0
-        top_player_title = top_player[2] if top_player and top_player[2] else "None"
-        top_player_url = top_player[3] if top_player else "#"
-
-        # Find the top three most played ECO codes (ensure to exclude null or invalid values)
-        most_played_eco = (
-            db.session.query(
-                Game.val_opening_eco_code,
-                func.count(Game.val_opening_eco_code).label("count"),
-            )
-            .filter(
-                Game.val_opening_eco_code.isnot(None),
-                Game.val_opening_eco_code != "?",
-            )
-            .group_by(Game.val_opening_eco_code)
-            .order_by(func.count(Game.val_opening_eco_code).desc())
-            .limit(10)  # Increase the limit to get enough data for filtering later
-            .all()
+        .filter(
+            Player.val_username
+            != "Anonymous",  # Ensure player is not named "Anonymous"
+            Player.val_title != "BOT",  # Ensure player is not a bot
         )
+        .order_by(Player.n_games_all.desc())
+        .first()  # Get the player with the most games
+    )
 
-        # Use a set to ensure distinct, valid openings
-        unique_openings = set()
-        most_played_openings = []
+    top_player_name = top_player[0] if top_player else "N/A"
+    top_player_url = top_player[2] if top_player else "#"
+    top_player_title = (
+        top_player[3] if top_player else "N/A"
+    )  # Ensure the title is fetched
+    top_player_games = top_player[1] if top_player else 0
 
-        # Loop through the results and filter for unique ECO codes
-        for eco, _ in most_played_eco:
-            eco_description = eco_descriptions.get(eco[:2], "Unknown Opening")
-            if eco_description not in unique_openings:
-                unique_openings.add(eco_description)
-                most_played_openings.append(eco_description)
-
-            # Stop once we have 3 unique openings
-            if len(most_played_openings) >= 3:
-                break
-
-        # If fewer than three openings are found, pad with "Unknown Opening"
-        while len(most_played_openings) < 3:
-            most_played_openings.append("Unknown Opening")
-
-        return jsonify(
-            {
-                "total_games": total_games,
-                "total_players": total_players,
-                "top_player": top_player_name,
-                "top_player_url": top_player_url,  # Return the profile URL
-                "top_player_games": top_player_games,
-                "top_player_title": top_player_title,
-                "most_played_openings": most_played_openings,
-            }
+    # Step 3: Get the top 3 most played ECO codes (distinct)
+    most_played_eco = (
+        db.session.query(
+            Game.val_opening_eco_code,
+            func.count(Game.val_opening_eco_code).label("count"),
         )
-    except Exception as e:
-        app.logger.error(f"Error in /api/metrics: {e}")
-        return jsonify({"error": "Failed to fetch metrics"}), 500
+        .filter(
+            Game.val_opening_eco_code.isnot(None),
+            Game.val_opening_eco_code != "?",
+            Game.val_result.isnot(None),
+        )
+        .group_by(Game.val_opening_eco_code)
+        .order_by(func.count(Game.val_opening_eco_code).desc())
+        .limit(3)  # Limit to top 3
+        .all()
+    )
+
+    # Using a set to store unique openings
+    unique_openings = set()
+    most_played_openings = []
+
+    for eco, _ in most_played_eco:
+        eco_description = eco_descriptions.get(eco[:2], "Unknown Opening")
+        if eco_description not in unique_openings:
+            unique_openings.add(eco_description)
+            most_played_openings.append(eco_description)
+
+    # If fewer than three unique openings, pad with "Unknown Opening"
+    while len(most_played_openings) < 3:
+        most_played_openings.append("Unknown Opening")
+
+    # Return metrics as JSON
+    return jsonify(
+        {
+            "total_games": total_games,
+            "total_players": total_players,
+            "top_player": top_player_name,
+            "top_player_url": top_player_url,
+            "top_player_title": top_player_title,  # Include the player's title here (if needed)
+            "top_player_games": top_player_games,
+            "most_played_openings": most_played_openings,
+        }
+    )
 
 
 if __name__ == "__main__":

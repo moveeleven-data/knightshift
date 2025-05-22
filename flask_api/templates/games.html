@@ -134,12 +134,13 @@
             border: none;
             border-radius: 4px;
             font-size: 1rem;
-            transition: background-color 0.3s ease, transform 0.3s ease;
+            transition: background-color 0.1s ease; /* Only transition the background color */
         }
 
+        /* Remove the growing effect on hover */
         .btn:hover {
-            background-color: #1A5276; /* Darker Blue */
-            transform: scale(1.05);
+            background-color: #1A5276; /* Darker Blue on hover */
+            transform: none; /* Remove the scaling effect */
         }
 
         .btn:active {
@@ -200,67 +201,74 @@
     </div>
 
     <div class="container mt-4">
-        <!-- Card for Game Data -->
-        <div class="card">
-            <div class="card-header">
-                Game Results
+    <!-- Card for Game Data -->
+    <div class="card">
+        <div class="card-header">
+            Game Results
+        </div>
+        <div class="card-body">
+            <!-- Table -->
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Game ID</th>
+                        <th>Event Name</th>
+                        <th>Result</th>
+                        <th>Game Link</th> <!-- New Column for Game Link -->
+                    </tr>
+                </thead>
+                <tbody id="gameTable">
+                    {% for game in games %}
+                    <tr>
+                        <td>{{ game.id_game }}</td>
+                        <td>{{ game.val_event_name }}</td>
+                        <td>{{ game.val_result }}</td>
+                        <td><a href="{{ game.val_site_url }}" target="_blank">View Game</a></td> <!-- Link to the game -->
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Export All Button (Moved here) -->
+            <div class="d-flex justify-content-end mb-3">
+                <a href="{{ url_for('export_all_csv') }}" class="btn btn-success">
+                    Export All Games to CSV
+                </a>
             </div>
-            <div class="card-body">
-                <!-- Table -->
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Game ID</th>
-                            <th>Event Name</th>
-                            <th>Result</th>
-                            <th>Game Link</th> <!-- New Column for Game Link -->
-                        </tr>
-                    </thead>
-                    <tbody id="gameTable">
-                        {% for game in games %}
-                        <tr>
-                            <td>{{ game.id_game }}</td>
-                            <td>{{ game.val_event_name }}</td>
-                            <td>{{ game.val_result }}</td>
-                            <td><a href="{{ game.val_site_url }}" target="_blank">View Game</a></td> <!-- Link to the game -->
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
 
-                <!-- Pagination Control -->
-                <div class="d-flex justify-content-between align-items-center">
-                    <!-- Row Count Selector -->
-                    <div>
-                        <label for="rowCountSelect">Rows per page:</label>
-                        <select id="rowCountSelect" class="form-control w-auto">
-                            <option value="5">5</option> <!-- Fewer rows -->
-                            <option value="15">15</option> <!-- Fewer rows -->
-                            <option value="30">30</option> <!-- Fewer rows -->
-                        </select>
-                    </div>
-
-                    <!-- Pagination Buttons -->
-                    <nav>
-                        <ul class="pagination">
-                            <li class="page-item" id="firstPage">
-                                <a class="page-link" href="#">First</a>
-                            </li>
-                            <li class="page-item" id="prevPage">
-                                <a class="page-link" href="#">Previous</a>
-                            </li>
-                            <li class="page-item" id="nextPage">
-                                <a class="page-link" href="#">Next</a>
-                            </li>
-                            <li class="page-item" id="lastPage">
-                                <a class="page-link" href="#">Last</a>
-                            </li>
-                        </ul>
-                    </nav>
+            <!-- Pagination Control -->
+            <div class="d-flex justify-content-between align-items-center">
+                <!-- Row Count Selector -->
+                <div>
+                    <label for="rowCountSelect">Rows per page:</label>
+                    <select id="rowCountSelect" class="form-control w-auto">
+                        <option value="5">5</option> <!-- Fewer rows -->
+                        <option value="15">15</option> <!-- Fewer rows -->
+                        <option value="30">30</option> <!-- Fewer rows -->
+                    </select>
                 </div>
+
+                <!-- Pagination Buttons -->
+                <nav>
+                    <ul class="pagination">
+                        <li class="page-item" id="firstPage">
+                            <a class="page-link" href="#">First</a>
+                        </li>
+                        <li class="page-item" id="prevPage">
+                            <a class="page-link" href="#">Previous</a>
+                        </li>
+                        <li class="page-item" id="nextPage">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                        <li class="page-item" id="lastPage">
+                            <a class="page-link" href="#">Last</a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>
+</div>
 
     <!-- Bootstrap JS, Popper.js, and jQuery for Tooltip functionality -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

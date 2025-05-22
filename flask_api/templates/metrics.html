@@ -96,10 +96,9 @@
           document.getElementById('totalGames').innerText = data.total_games;
           document.getElementById('totalPlayers').innerText = data.total_players;
 
-          // Update the top player details (name, profile link, total games, title)
+          // Update the top player details (name, profile link, total games)
           document.getElementById('topPlayer').innerHTML = `${data.top_player} (<a href="${data.top_player_url}" target="_blank">Profile</a>)`;
           document.getElementById('topPlayerGames').innerText = data.top_player_games;
-          document.getElementById('topPlayerTitle').innerText = data.top_player_title;
 
           // Generate HTML for top 3 most played openings
           let openingsHtml = '';
@@ -140,7 +139,7 @@
         <p class="metric">Most Active Player: <strong id="topPlayer">{{ top_player }}</strong></p>
         <p class="metric">Total Games:
           <strong id="topPlayerGames">{{ top_player_games }}</strong></p>
-        <p class="metric">Title: <strong id="topPlayerTitle">{{ top_player_title }}</strong></p>
+        <!-- Removed the title from the display -->
         <p class="metric">Top 3 Most Played Openings:</p>
         <div id="mostPlayedOpenings"></div>
       </div>

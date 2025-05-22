@@ -82,7 +82,7 @@ TIME_PER_GAME = 0.5  # seconds between individual API calls
 BATCH_SIZE = 3_000  # games processed before a long pause
 BATCH_PAUSE = 15 * 60  # seconds to pause after each big batch
 PROGRESS_INTERVAL = 30  # seconds between progress log lines
-SCRIPT_TIME_LIMIT = 5  # hard stop (seconds) – keeps CI tests fast
+SCRIPT_TIME_LIMIT = 30  # hard stop (seconds) – keeps CI tests fast
 
 # ───────────────────────────────────────────────────────────────────────────────
 # Shared HTTP Session for API Calls

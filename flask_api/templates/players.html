@@ -7,374 +7,333 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        /* General Styles */
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f0f4f8; /* Soft background color */
-            color: #2c3e50;
-            margin: 0;
-            padding: 0;
-        }
+    /* General Styles */
+    body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #f0f4f8;
+        color: #2c3e50;
+        margin: 0;
+        padding: 0;
+    }
 
-        .container {
-            max-width: 1200px;
-        }
+    .container {
+        max-width: 1200px;
+        margin-top: 0px;
+    }
 
-        h1 {
-            font-size: 3rem;
-            color: #2c3e50;
-            margin-bottom: 40px;
-            font-weight: 700;
-            margin-left: 20px; /* Slightly move the title to the right */
-        }
+    h1 {
+        font-size: 2.75rem;
+        color: #2c3e50;
+        margin-bottom: 5px;
+        font-weight: 700;
+        margin-left: 20px;
+    }
 
-        /* Title and Logo Section */
-        .title-container {
-            display: flex;
-            justify-content: space-between; /* Align logo, title, and home button */
-            align-items: center;
-            width: 100%;
-            padding-top: 20px;
-        }
+    .title-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding-top: 1px;
+        padding-bottom: 5px;
+    }
 
-        /* Move the player icon slightly to the right */
-        .title-container .logo-img {
-            width: 63px; /* Slightly larger size */
-            height: 63px;
-            border-radius: 50%;
-            margin-right: 15px; /* Space between the icon and title */
-            margin-left: 370px; /* Move the icon slightly to the right */
-        }
+    .title-container .logo-img {
+        width: 63px;
+        height: 63px;
+        border-radius: 50%;
+        margin-right: 10px;
+        margin-left: 360px;
+    }
 
-        .title-container h1 {
-            font-size: 2.8rem;
-            font-weight: 700;
-            margin-bottom: 0;
-            flex-grow: 1; /* Ensures title takes the available space */
-            margin-left: 30px; /* Move title text slightly to the right */
-        }
+    .title-container h1 {
+        font-size: 2.75rem;
+        font-weight: 700;
+        margin-bottom: 0;
+        flex-grow: 1;
+        margin-left: 25px;
+    }
 
-        /* Home Button Styling */
-        .home-btn {
-            cursor: pointer;
-            transition: opacity 0.3s ease, transform 0.2s ease;
-            margin-right: 358px; /* Move the home button slightly to the left */
-        }
+    .home-btn {
+        cursor: pointer;
+        transition: opacity 0.3s ease, transform 0.2s ease;
+        margin-right: 390px;
+    }
 
-        .home-btn img {
-            width: 40px;
-            height: 40px;
-        }
+    .home-btn img {
+        width: 45px;
+        height: 45px;
+    }
 
-        .home-btn:hover {
-            opacity: 0.8;
-            transform: scale(1.1); /* Slight increase in size on hover */
-        }
+    .home-btn:hover {
+        opacity: 0.8;
+        transform: scale(1.1);
+    }
 
-        /* Table Styling */
-        .table {
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 30px;
-            background-color: white;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* Added shadow around the whole table */
-            table-layout: fixed; /* Fix column widths */
-            width: 100%; /* Make the table occupy full width */
-            visibility: hidden; /* Hide table content initially */
-            opacity: 0; /* Start with 0 opacity */
-            transition: opacity 0.5s ease-in-out; /* Smooth transition to reveal content */
-        }
+    .table-container {
+        overflow-x: auto;
+        margin-top: 20px;
+    }
 
-        /* Fix Column Widths */
-        .table th, .table td {
-            text-align: center;
-            vertical-align: middle;
-            padding: 20px; /* Increased padding for more breathing room */
-            font-size: 1.1rem;
-            border-left: 1px solid #e0e0e0; /* Light border between columns */
-        }
+    .table {
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: white;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        table-layout: auto;
+        width: 100%;
+    }
 
-        /* Remove border from the first column (no left border) */
-        .table th:first-child, .table td:first-child {
-            border-left: none;
-        }
+    .table th, .table td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 15px;
+        font-size: 1rem;
+        border-left: 1px solid #e0e0e0;
+    }
 
-        /* Set fixed widths for columns */
-        .table th:nth-child(1), .table td:nth-child(1) {
-            width: 15%; /* More space for the username column */
-        }
-        .table th:nth-child(2), .table td:nth-child(2) {
-            width: 12%;
-        }
-        .table th:nth-child(3), .table td:nth-child(3) {
-            width: 12%;
-        }
-        .table th:nth-child(4), .table td:nth-child(4) {
-            width: 12%;
-        }
-        .table th:nth-child(5), .table td:nth-child(5) {
-            width: 12%;
-        }
-        .table th:nth-child(6), .table td:nth-child(6) {
-            width: 12%;
-        }
-        .table th:nth-child(7), .table td:nth-child(7) {
-            width: 12%;
-        }
-        .table th:nth-child(8), .table td:nth-child(8) {
-            width: 12%;
-        }
-        .table th:nth-child(9), .table td:nth-child(9) {
-            width: 12%;
-        }
-        .table th:nth-child(10), .table td:nth-child(10) {
-            width: 12%; /* New column for Profile URL */
-        }
+    .table th:first-child, .table td:first-child {
+        border-left: none;
+    }
 
-        .table th {
-            background-color: #3498db;
-            color: white;
-            font-weight: 700;
-        }
+    .table th {
+        background-color: #3498db;
+        color: white;
+        font-weight: 700;
+    }
 
-        .table td {
-            font-size: 1rem;
-            color: #34495e;
-        }
+    .table td {
+        font-size: 1rem;
+        color: #34495e;
+    }
 
-        /* Right-align specific columns (numeric data) */
-        .table td.right-align {
-            text-align: right;
-        }
+    .pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+    }
 
-        /* Zebra striping for readability with slightly darker alternating row colors */
-        .table tbody tr:nth-child(even) {
-            background-color: #e3f2fd; /* Slightly darker alternating row color */
-        }
+    .pagination .page-item {
+        list-style: none;
+    }
 
-        /* Hover effects */
-        .table tbody tr:hover {
-            background-color: #dfe6e9;
-            cursor: pointer;
-        }
+    .pagination .page-link {
+        color: #1A3D49;
+        border: 1px solid #ccc;
+        padding: 10px 20px;
+        margin: 0 5px;
+        cursor: pointer;
+        border-radius: 5px;
+    }
 
-        /* Styling for empty "N/A" cells */
-        .na-cell {
-            color: #95a5a6;
-            font-style: italic;
-        }
+    .pagination .page-link:hover {
+        background-color: #ddd;
+    }
 
-        /* Player Profile Links */
-        .player-url {
-            color: #2980b9;
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
+    .pagination .disabled .page-link {
+        color: #ccc;
+        cursor: not-allowed;
+    }
 
-        .player-url:hover {
-            text-decoration: underline;
-            color: #16a085;
-        }
-
-        /* Pagination Styles */
-        .pagination {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-        }
-
-        .pagination .page-item {
-            list-style: none;
-        }
-
-        .pagination .page-link {
-            color: #1A3D49;
-            border: 1px solid #ccc;
-            padding: 10px 20px;
-            margin: 0 5px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-
-        .pagination .page-link:hover {
-            background-color: #ddd;
-        }
-
-        .pagination .disabled .page-link {
-            color: #ccc;
-            cursor: not-allowed;
-        }
-
-        .form-control {
-            width: 150px;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .table th, .table td {
-                font-size: 0.9rem;
-                padding: 10px;
-            }
-
-            h1 {
-                font-size: 2rem;
-            }
-
-            .container {
-                padding: 15px;
-            }
-
-            .title-container {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .home-btn {
-                font-size: 1rem;
-                padding: 10px 15px;
-            }
-
-            .pagination {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
+    .form-control {
+        width: 150px;
+    }
     </style>
 </head>
 <body>
 
     <div class="container mt-5">
-        <!-- Title and Image Section -->
         <div class="title-container">
-            <!-- Logo to the left of the title text -->
             <img src="{{ url_for('static', filename='images/players2.png') }}" alt="KnightShift Logo" class="logo-img">
             <h1>Player Stats</h1>
-            <!-- Home Button on the right side of the title bar -->
             <a href="/" class="home-btn">
                 <img src="{{ url_for('static', filename='images/home1.png') }}" alt="Home Icon">
             </a>
         </div>
 
-        <div class="card-body">
-            {% if players %}
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Classical Rating</th>
-                            <th>Rapid Rating</th>
-                            <th>Blitz Rating</th>
-                            <th>Bullet Rating</th>
-                            <th>Total Games</th>
-                            <th>Games Won</th>
-                            <th>Games Lost</th>
-                            <th>Games Drawn</th>
-                            <th>Profile</th> <!-- New Column for Profile URL -->
-                        </tr>
-                    </thead>
-                    <tbody id="player-table">
-                        {% for player in players %}
-                        <tr>
-                            <td>{{ player.val_username }}</td>
-                            <td class="right-align">{{ player.val_rating_classical if player.val_rating_classical else 'N/A' }}</td>
-                            <td class="right-align">{{ player.val_rating_rapid if player.val_rating_rapid else 'N/A' }}</td>
-                            <td class="right-align">{{ player.val_rating_blitz if player.val_rating_blitz else 'N/A' }}</td>
-                            <td class="right-align">{{ player.val_rating_bullet if player.val_rating_bullet else 'N/A' }}</td>
-                            <td class="right-align">{{ player.n_games_all if player.n_games_all else 'N/A' }}</td>
-                            <td class="right-align">{{ player.n_games_win if player.n_games_win else 'N/A' }}</td>
-                            <td class="right-align">{{ player.n_games_loss if player.n_games_loss else 'N/A' }}</td>
-                            <td class="right-align">{{ player.n_games_draw if player.n_games_draw else 'N/A' }}</td>
-                            <td>
-                                <a href="{{ player.val_url }}" class="player-url" target="_blank">View Profile</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="text-right mb-3" style="margin-right: 25px;"> <!-- Slight margin to the right -->
+            <a href="{{ url_for('export_csv') }}" class="btn" style="background-color: #2C3E50; color: white;">Export CSV</a>
+        </div>
 
-                <!-- Pagination Controls -->
-                <div class="pagination">
-                    <div class="form-group">
-                        <label for="rowsPerPage">Rows per page:</label>
-                        <select class="form-control" id="rowsPerPage" onchange="setRows(this.value)">
-                            <option value="5">5</option>
-                            <option value="15">15</option>
-                            <option value="30">30</option>
-                        </select>
-                    </div>
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination">
-                            <li class="page-item" id="firstPage">
-                                <a class="page-link" href="javascript:void(0);" onclick="goToPage(1)">First</a>
-                            </li>
-                            <li class="page-item" id="prevPage">
-                                <a class="page-link" href="javascript:void(0);" onclick="goToPage(currentPage - 1)">Previous</a>
-                            </li>
-                            <li class="page-item" id="nextPage">
-                                <a class="page-link" href="javascript:void(0);" onclick="goToPage(currentPage + 1)">Next</a>
-                            </li>
-                            <li class="page-item" id="lastPage">
-                                <a class="page-link" href="javascript:void(0);" onclick="goToPage(totalPages)">Last</a>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
-            {% else %}
-                <p class="text-center">No players found.</p>
-            {% endif %}
+        <div class="card-body">
+    {% if players %}
+        <div class="table-container">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Title</th>
+                        <th>Real Name</th>
+                        <th>Location</th>
+                        <th>Bio</th>
+                        <th>FIDE Rating</th>
+                        <th>USCF Rating</th>
+                        <th>Bullet Rating</th>
+                        <th>Blitz Rating</th>
+                        <th>Classical Rating</th>
+                        <th>Rapid Rating</th>
+                        <th>Chess960 Rating</th>
+                        <th>Ultra Bullet Rating</th>
+                        <th>Country</th>
+                        <th>Profile URL</th>
+                        <th>Total Games</th>
+                        <th>Games Won</th>
+                        <th>Games Lost</th>
+                        <th>Games Drawn</th>
+                        <th>Patron</th>
+                        <th>Streamer</th>
+                    </tr>
+                </thead>
+                <tbody id="player-table">
+                    {% for player in players %}
+                    <tr>
+                        <td>{{ player.val_username }}</td>
+                        <td>{{ player.val_title if player.val_title else 'N/A' }}</td>
+                        <td>{{ player.val_real_name if player.val_real_name else 'N/A' }}</td>
+                        <td>{{ player.val_location if player.val_location else 'N/A' }}</td>
+                        <td>
+                            {% if player.val_bio and player.val_bio not in ['N/A', '', 'Not Provided'] %}
+                                <button class="btn btn-info" data-toggle="modal" data-target="#bioModal" data-bio="{{ player.val_bio }}" style="background-color: #3498db; color: white; border: none;">
+                                    View Bio
+                                </button>
+                            {% else %}
+                                Not Provided
+                            {% endif %}
+                        </td>
+                        <td>{{ player.val_rating_fide if player.val_rating_fide else 'N/A' }}</td>
+                        <td>{{ player.val_rating_uscf if player.val_rating_uscf else 'N/A' }}</td>
+                        <td>{{ player.val_rating_bullet if player.val_rating_bullet else 'N/A' }}</td>
+                        <td>{{ player.val_rating_blitz if player.val_rating_blitz else 'N/A' }}</td>
+                        <td>{{ player.val_rating_classical if player.val_rating_classical else 'N/A' }}</td>
+                        <td>{{ player.val_rating_rapid if player.val_rating_rapid else 'N/A' }}</td>
+                        <td>{{ player.val_rating_chess960 if player.val_rating_chess960 else 'N/A' }}</td>
+                        <td>{{ player.val_rating_ultra_bullet if player.val_rating_ultra_bullet else 'N/A' }}</td>
+                        <td>{{ player.val_country_code if player.val_country_code else 'N/A' }}</td>
+                        <td>
+                            <a href="{{ player.val_url }}" class="player-url" target="_blank">View Profile</a>
+                        </td>
+                        <td>{{ player.n_games_all if player.n_games_all else 'N/A' }}</td>
+                        <td>{{ player.n_games_win if player.n_games_win else 'N/A' }}</td>
+                        <td>{{ player.n_games_loss if player.n_games_loss else 'N/A' }}</td>
+                        <td>{{ player.n_games_draw if player.n_games_draw else 'N/A' }}</td>
+                        <td>{{ player.ind_patron if player.ind_patron else 'N/A' }}</td>
+                        <td>{{ player.ind_streaming if player.ind_streaming else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="pagination">
+            <div class="form-group">
+                <label for="rowsPerPage">Rows per page:</label>
+                <select class="form-control" id="rowsPerPage" onchange="setRows(this.value)">
+                    <option value="5">5</option>
+                    <option value="15">15</option>
+                    <option value="30">30</option>
+                </select>
+            </div>
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    <li class="page-item" id="firstPage">
+                        <a class="page-link" href="javascript:void(0);" onclick="goToPage(1)">First</a>
+                    </li>
+                    <li class="page-item" id="prevPage">
+                        <a class="page-link" href="javascript:void(0);" onclick="goToPage(currentPage - 1)">Previous</a>
+                    </li>
+                    <li class="page-item" id="nextPage">
+                        <a class="page-link" href="javascript:void(0);" onclick="goToPage(currentPage + 1)">Next</a>
+                    </li>
+                    <li class="page-item" id="lastPage">
+                        <a class="page-link" href="javascript:void(0);" onclick="goToPage(totalPages)">Last</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    {% else %}
+        <p class="text-center">No players found.</p>
+    {% endif %}
+</div>
+
+<!-- Bio Modal -->
+<div class="modal fade" id="bioModal" tabindex="-1" role="dialog" aria-labelledby="bioModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bioModalLabel">Player Bio</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="bioContent">
+                <!-- The Bio content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
+</div>
 
-    <script>
-        let currentPage = 1;
-        let rowsPerPage = 5;
-        let totalPages = 0;
+<!-- jQuery, Popper.js, and Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-        // Set the initial number of rows before rendering the table
-        window.onload = function() {
-            setRows(rowsPerPage);
-            paginate();
-            document.querySelector('.table').style.visibility = 'visible';  // Make the table visible after JS logic runs
-            document.querySelector('.table').style.opacity = 1;  // Fade in the content
-        };
+<script>
+    let currentPage = 1;
+    let rowsPerPage = 5;
+    let totalPages = 0;
 
-        const setRows = (num) => {
-            rowsPerPage = parseInt(num);
-            currentPage = 1; // Reset to first page
-            paginate();
-        };
+    window.onload = function() {
+        setRows(rowsPerPage);
+        paginate();
+    };
 
-        const paginate = () => {
-            const rows = document.querySelectorAll('#player-table tr');
-            const totalRows = rows.length;
-            totalPages = Math.ceil(totalRows / rowsPerPage);
+    const setRows = (num) => {
+        rowsPerPage = parseInt(num);
+        currentPage = 1;
+        paginate();
+    };
 
-            const startIndex = (currentPage - 1) * rowsPerPage;
-            const endIndex = startIndex + rowsPerPage;
+    const paginate = () => {
+        const rows = document.querySelectorAll('#player-table tr');
+        const totalRows = rows.length;
+        totalPages = Math.ceil(totalRows / rowsPerPage);
 
-            rows.forEach((row, index) => {
-                if (index >= startIndex && index < endIndex) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
 
-            // Update pagination buttons
-            document.getElementById('firstPage').classList.toggle('disabled', currentPage === 1);
-            document.getElementById('prevPage').classList.toggle('disabled', currentPage === 1);
-            document.getElementById('nextPage').classList.toggle('disabled', currentPage === totalPages);
-            document.getElementById('lastPage').classList.toggle('disabled', currentPage === totalPages);
-        };
+        rows.forEach((row, index) => {
+            if (index >= startIndex && index < endIndex) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
 
-        const goToPage = (page) => {
-            if (page < 1 || page > totalPages) return;
-            currentPage = page;
-            paginate();
-        };
-    </script>
+        document.getElementById('firstPage').classList.toggle('disabled', currentPage === 1);
+        document.getElementById('prevPage').classList.toggle('disabled', currentPage === 1);
+        document.getElementById('nextPage').classList.toggle('disabled', currentPage === totalPages);
+        document.getElementById('lastPage').classList.toggle('disabled', currentPage === totalPages);
+    };
+
+    const goToPage = (page) => {
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        paginate();
+    };
+
+    // Handle modal bio content
+    $('#bioModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        var bio = button.data('bio'); // Extract bio from data attribute
+        var modal = $(this);
+        modal.find('.modal-body').text(bio); // Insert bio into the modal body
+    });
+</script>
 
 </body>
 </html>

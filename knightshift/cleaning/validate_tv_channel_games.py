@@ -3,8 +3,6 @@
 validate_tv_channel_games.py
 ────────────────────────────
 • Cleans / normalizes rows in **tv_channel_games**
-• Patches NULL / blank fields in **lichess_users**
-
 """
 
 from __future__ import annotations
@@ -48,7 +46,6 @@ LOGGER = setup_logger("validate_tv_channel_games")
 ENGINE = create_engine(get_database_url(load_db_credentials()))
 META = MetaData()
 TV_GAMES: Table = Table("tv_channel_games", META, autoload_with=ENGINE)
-LICHESS_USERS: Table = Table("lichess_users", META, autoload_with=ENGINE)
 SessionLocal = sessionmaker(bind=ENGINE)
 
 # ────────────────────────────────
@@ -64,18 +61,10 @@ VALID_RESULTS: set[str] = {"1-0", "0-1", "1/2-1/2"}
 CANON_TERM: set[str] = {"NORMAL", "TIME_FORFEIT", "RESIGNED", "ABANDONED"}
 THROTTLE_DELAY: float = 0  # seconds between rows
 
-# Defaults to back-fill in *lichess_users*
-DEFAULT_TEXT: Dict[str, str] = {
-    "val_title": "None",
-    "val_real_name": "Not Provided",
-    "val_location": "Not Provided",
-    "val_bio": "Not Provided",
-    "val_country_code": "Unknown",
-}
-DEFAULT_BOOL: Dict[str, bool] = {
-    "ind_patron": False,
-    "ind_streaming": False,
-}
+# ────────────────────────────────
+# Toggle for re-validating all rows
+# ────────────────────────────────
+FORCE_REVALIDATE = True  # Set to False to skip re-validation of already processed rows
 
 
 # ────────────────────────────────
@@ -113,35 +102,12 @@ def _clean_title(raw: str | None) -> str:
 
 def _needs_tv_fix(row) -> bool:
     """True ⇢ row still violates at least one rule."""
+    if FORCE_REVALIDATE:
+        return True  # Always revalidate, even if already validated
     return (
         not row.ind_validated
         or (row.val_opening_eco_code and "?" in row.val_opening_eco_code)
         or (row.val_termination not in CANON_TERM)
-    )
-
-
-# ────────────────────────────────
-#  lichess_users patch
-# ────────────────────────────────
-def _patch_user(session: Session, user_id: str) -> None:
-    """Fill NULL / blank profile fields for *user_id* (idempotent)."""
-    if not user_id:
-        return
-
-    text_conds = [
-        or_(
-            LICHESS_USERS.c[col].is_(None),
-            LICHESS_USERS.c[col] == "",
-            LICHESS_USERS.c[col].ilike("unranked") if col == "val_title" else False,
-        )
-        for col in DEFAULT_TEXT
-    ]
-    bool_conds = [LICHESS_USERS.c[col].is_(None) for col in DEFAULT_BOOL]
-
-    session.execute(
-        update(LICHESS_USERS)
-        .where(and_(LICHESS_USERS.c.id_user == user_id, or_(*text_conds, *bool_conds)))
-        .values(**DEFAULT_TEXT, **DEFAULT_BOOL)
     )
 
 
@@ -216,10 +182,6 @@ def _process_row(session: Session, row) -> Tuple[bool, bool]:
             val_validation_notes=", ".join(notes) if notes else "Valid",
         )
     )
-
-    # ── patch linked users
-    for uid in (row.id_user_white, row.id_user_black):
-        _patch_user(session, uid)
 
     return True, False
 

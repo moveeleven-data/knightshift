@@ -73,7 +73,7 @@ load_dotenv(ENV_FILE)
 LOGGER = setup_logger("get_games_from_tv", level=logging.INFO)
 
 # numeric env‑vars with sane fall‑backs
-TIME_LIMIT: Final[int] = int(os.getenv("TIME_LIMIT", 90))  # seconds
+TIME_LIMIT: Final[int] = int(os.getenv("TIME_LIMIT", 4))  # seconds
 SLEEP_INTERVAL: Final[int] = int(os.getenv("SLEEP_INTERVAL", 5))  # seconds
 RATE_LIMIT_PAUSE: Final[int] = int(os.getenv("RATE_LIMIT_PAUSE", 900))
 MAX_GAMES: Final[int] = int(os.getenv("MAX_GAMES", 5000))
