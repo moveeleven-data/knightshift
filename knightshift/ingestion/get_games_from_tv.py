@@ -73,7 +73,7 @@ load_dotenv(ENV_FILE)
 LOGGER = setup_logger("get_games_from_tv", level=logging.INFO)
 
 # numeric env‑vars with sane fall‑backs
-TIME_LIMIT: Final[int] = int(os.getenv("TIME_LIMIT", 30))  # seconds
+TIME_LIMIT: Final[int] = int(os.getenv("TIME_LIMIT", 90))  # seconds
 SLEEP_INTERVAL: Final[int] = int(os.getenv("SLEEP_INTERVAL", 5))  # seconds
 RATE_LIMIT_PAUSE: Final[int] = int(os.getenv("RATE_LIMIT_PAUSE", 900))
 MAX_GAMES: Final[int] = int(os.getenv("MAX_GAMES", 5000))
@@ -83,17 +83,7 @@ CHANNELS: Final[Sequence[str]] = (
     "blitz",
     "classical",
     "rapid",
-    "chess960",
-    "antichess",
-    "atomic",
-    "horde",
-    "crazyhouse",
-    "bot",
-    "computer",
-    "kingOfTheHill",
-    "threeCheck",
     "ultraBullet",
-    "racingKings",
 )
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -242,7 +232,7 @@ def run_tv_ingestion() -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────
-# ⏯️  CLI entry‑point
+#   CLI entry‑point
 # ──────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     run_tv_ingestion()

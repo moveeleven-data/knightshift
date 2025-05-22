@@ -2,7 +2,8 @@
 """
 run_enrichment.py
 
-Entry point for user profile enrichment. Runs backfill_user_profiles.main.
+Entry point for user profile enrichment. Runs backfill_user_profiles.main
+and backfill_opening_names.main.
 """
 
 import sys
@@ -18,8 +19,15 @@ PROJECT_ROOT = CURRENT_FILE.parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-# Now import your enrichment logic
-from knightshift.enrichment.backfill_user_profiles import main
+# Import enrichment logic
+from knightshift.enrichment.backfill_user_profiles import run_backfill_user_profiles
+from knightshift.enrichment.backfill_opening_names import run_backfill_opening_names
+
+
+def run_enrichment_pipeline():
+    run_backfill_user_profiles()  # existing backfill user profiles
+    run_backfill_opening_names()  # new backfill opening names logic
+
 
 if __name__ == "__main__":
-    main()
+    run_enrichment_pipeline()

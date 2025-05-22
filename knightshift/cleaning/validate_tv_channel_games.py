@@ -10,6 +10,7 @@ validate_tv_channel_games.py
 from __future__ import annotations
 
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -211,6 +212,7 @@ def _process_row(session: Session, row) -> Tuple[bool, bool]:
             val_opening_eco_code=eco,
             val_termination=term,
             ind_validated=True,
+            tm_validated=datetime.utcnow(),  # Set the current timestamp when validated
             val_validation_notes=", ".join(notes) if notes else "Valid",
         )
     )

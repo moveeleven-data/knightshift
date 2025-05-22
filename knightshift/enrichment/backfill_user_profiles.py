@@ -122,7 +122,7 @@ TIME_PER_USER = 0.5  # seconds between individual API calls
 BATCH_SIZE = 3_000  # users processed before a long pause
 BATCH_PAUSE = 15 * 60  # seconds to pause after each big batch
 PROGRESS_INTERVAL = 30  # seconds between progress log lines
-SCRIPT_TIME_LIMIT = 3  # hard stop (seconds) – keeps CI tests fast
+SCRIPT_TIME_LIMIT = 5  # hard stop (seconds) – keeps CI tests fast
 
 # ──────────────────────────────────────────────────────────────────────────
 #   Shared HTTP session
@@ -322,7 +322,7 @@ def _process(users: Set[str]) -> None:
 # ═════════════════════════════════════════════════════════════════════════
 # Entry‑point
 # ═════════════════════════════════════════════════════════════════════════
-def main() -> None:
+def run_backfill_user_profiles() -> None:
     users = _collect_unprofiled_users()
     if not users:
         LOGGER.info("All profiles up‑to‑date – nothing to do.")
@@ -331,4 +331,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    run_backfill_user_profiles()

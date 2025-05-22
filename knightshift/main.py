@@ -21,7 +21,9 @@ PROJECT_ROOT: Final[Path] = SRC_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT))  # make src.* importable before pylint/mypy
 
 from knightshift.pipeline.run_cleaning import validate_and_clean  # noqa: E402
-from knightshift.pipeline.run_enrichment import main as run_enrichment  # noqa: E402
+from knightshift.pipeline.run_enrichment import (
+    run_enrichment_pipeline as run_enrichment,
+)  # noqa: E402
 from knightshift.pipeline.run_ingestion import run_tv_ingestion  # noqa: E402
 
 # ── Logging setup (shared file across stages) ───────────────────
