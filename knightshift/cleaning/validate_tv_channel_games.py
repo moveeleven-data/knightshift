@@ -2,45 +2,29 @@
 """
 validate_tv_channel_games.py
 ────────────────────────────
-• Cleans / normalizes rows in **tv_channel_games**
+Cleans and normalizes rows in the `tv_channel_games` table.
 """
 
 from __future__ import annotations
 
+import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import List, Tuple
 
 from dotenv import load_dotenv
-from sqlalchemy import (
-    MetaData,
-    Table,
-    and_,
-    create_engine,
-    delete,
-    or_,
-    select,
-    update,
-)
+from sqlalchemy import MetaData, Table, create_engine, delete, select, update
 from sqlalchemy.orm import Session, sessionmaker
 
-# ────────────────────────────────
-# Project bootstrap
-# ────────────────────────────────
-ROOT = Path(__file__).resolve().parents[2]  # knightshift/
-import sys as _sys
-
-_sys.path.insert(0, str(ROOT))  # noqa: E702
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
 
 from knightshift.utils.db_utils import get_database_url, load_db_credentials
 from knightshift.utils.logging_utils import setup_logger
 
-# ────────────────────────────────
-# Environment / DB
-# ────────────────────────────────
+# Environment and DB setup
 load_dotenv(ROOT / "config" / ".env.local")
-
 LOGGER = setup_logger("validate_tv_channel_games")
 
 ENGINE = create_engine(get_database_url(load_db_credentials()))
@@ -48,30 +32,18 @@ META = MetaData()
 TV_GAMES: Table = Table("tv_channel_games", META, autoload_with=ENGINE)
 SessionLocal = sessionmaker(bind=ENGINE)
 
-# ────────────────────────────────
-# Static configuration
-# ────────────────────────────────
-REQUIRED_FIELDS: Tuple[str, ...] = (
-    "id_user_white",
-    "id_user_black",
-    "val_moves_pgn",
-    "val_result",
-)
-VALID_RESULTS: set[str] = {"1-0", "0-1", "1/2-1/2"}
-CANON_TERM: set[str] = {"NORMAL", "TIME_FORFEIT", "RESIGNED", "ABANDONED"}
-THROTTLE_DELAY: float = 0  # seconds between rows
-
-# ────────────────────────────────
-# Toggle for re-validating all rows
-# ────────────────────────────────
-FORCE_REVALIDATE = True  # Set to False to skip re-validation of already processed rows
+# Configuration
+REQUIRED_FIELDS = ("id_user_white", "id_user_black", "val_moves_pgn", "val_result")
+VALID_RESULTS = {"1-0", "0-1", "1/2-1/2"}
+CANON_TERM = {"NORMAL", "TIME_FORFEIT", "RESIGNED", "ABANDONED"}
+THROTTLE_DELAY = 0
+FORCE_REVALIDATE = True
 
 
 # ────────────────────────────────
-# Utility helpers
+# Validators & Helpers
 # ────────────────────────────────
-def _to_int(v: Any) -> int | None:
-    """Cast to int – None on failure / None input."""
+def _to_int(v) -> int | None:
     try:
         return int(v) if v is not None else None
     except (TypeError, ValueError):
@@ -92,7 +64,6 @@ def _validate_result(row) -> Tuple[bool, str]:
 
 
 def _clean_title(raw: str | None) -> str:
-    """Keep 'None', upper-case everything else; map 'Unranked' → 'None'."""
     return (
         "None"
         if not raw or raw.strip().lower() in {"none", "unranked"}
@@ -101,37 +72,26 @@ def _clean_title(raw: str | None) -> str:
 
 
 def _needs_tv_fix(row) -> bool:
-    """True ⇢ row still violates at least one rule."""
-    if FORCE_REVALIDATE:
-        return True  # Always revalidate, even if already validated
     return (
-        not row.ind_validated
-        or (row.val_opening_eco_code and "?" in row.val_opening_eco_code)
-        or (row.val_termination not in CANON_TERM)
+        True
+        if FORCE_REVALIDATE
+        else (
+            not row.ind_validated
+            or (row.val_opening_eco_code and "?" in row.val_opening_eco_code)
+            or (row.val_termination not in CANON_TERM)
+        )
     )
 
 
 # ────────────────────────────────
-#  Row processor
+# Row Processor
 # ────────────────────────────────
 def _process_row(session: Session, row) -> Tuple[bool, bool]:
-    """
-    Normalise a single *tv_channel_games* record.
-
-    Returns
-    -------
-    processed : bool
-        Always True (function does work for every call).
-    was_deleted : bool
-        True if the row failed hard validation and was removed.
-    """
     notes: List[str] = []
 
-    # ── titles
     title_white = _clean_title(row.val_title_white)
     title_black = _clean_title(row.val_title_black)
 
-    # ── hard validation (may delete row)
     for check in (_validate_required, _validate_result):
         ok, msg = check(row)
         if not ok:
@@ -139,15 +99,14 @@ def _process_row(session: Session, row) -> Tuple[bool, bool]:
             session.execute(delete(TV_GAMES).where(TV_GAMES.c.id_game == row.id_game))
             return True, True
 
-    # ── rating casts
     elo_white = _to_int(row.val_elo_white)
     elo_black = _to_int(row.val_elo_black)
+
     if row.val_elo_white is not None and elo_white is None:
         notes.append("Invalid val_elo_white")
     if row.val_elo_black is not None and elo_black is None:
         notes.append("Invalid val_elo_black")
 
-    # ── ECO “?” → NULL
     eco = (
         None
         if (row.val_opening_eco_code or "").strip() == "?"
@@ -156,17 +115,16 @@ def _process_row(session: Session, row) -> Tuple[bool, bool]:
     if eco is None:
         notes.append("Set val_opening_eco_code to NULL")
 
-    # ── termination mapping
     term_key = (row.val_termination or "").strip().upper()
     term = {
         "TIME FORFEIT": "TIME_FORFEIT",
         "UNTERMINATED": "NORMAL",
         **{t: t for t in CANON_TERM},
     }.get(term_key, "NORMAL")
+
     if term_key != term:
         notes.append(f"Normalized termination: {row.val_termination} → {term}")
 
-    # ── write back
     session.execute(
         update(TV_GAMES)
         .where(TV_GAMES.c.id_game == row.id_game)
@@ -178,7 +136,7 @@ def _process_row(session: Session, row) -> Tuple[bool, bool]:
             val_opening_eco_code=eco,
             val_termination=term,
             ind_validated=True,
-            tm_validated=datetime.utcnow(),  # Set the current timestamp when validated
+            tm_validated=datetime.utcnow(),
             val_validation_notes=", ".join(notes) if notes else "Valid",
         )
     )
@@ -187,10 +145,9 @@ def _process_row(session: Session, row) -> Tuple[bool, bool]:
 
 
 # ────────────────────────────────
-#  Controller
+# Controller
 # ────────────────────────────────
 def validate_and_clean() -> None:
-    """Entry controller: fetch rows, process, commit."""
     with SessionLocal() as session:
         raw_rows = session.execute(select(TV_GAMES)).fetchall()
         rows = [r for r in raw_rows if _needs_tv_fix(r)]
@@ -204,12 +161,13 @@ def validate_and_clean() -> None:
                 if processed:
                     updated += not was_deleted
                     deleted += was_deleted
-            except Exception as exc:  # pragma: no cover
+            except Exception as exc:
                 LOGGER.error("Error %s: %s – rolling back", row.id_game, exc)
                 session.rollback()
 
             if idx % 30 == 0:
                 LOGGER.info("Processed %d/%d…", idx, len(rows))
+
             time.sleep(THROTTLE_DELAY)
 
         session.commit()
@@ -217,7 +175,7 @@ def validate_and_clean() -> None:
 
 
 # ────────────────────────────────
-#  CLI
+# CLI
 # ────────────────────────────────
 if __name__ == "__main__":
     validate_and_clean()
