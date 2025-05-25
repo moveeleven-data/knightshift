@@ -1,0 +1,86 @@
+[33m85c4b48[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m Clean up project directory
+[33me15decd[m Refactor cleaning and enrichment scripts
+[33m8c5c56a[m Update metrics page on Flask UI with more clear titles
+[33mc300ca6[m Add cleaning steps to handle all missing/null data from tv_channel_games and lichess_users table, add export CSV to Flask players and games pages, add all information to players table on Flask page
+[33m8712569[m Add additional enrichment step: backfill_opening_names that adds ECO code and opening name to table, add additional cleaning step to fill in player rating data, ensure tm_ingested is being updated correctly
+[33m97be6c4[m Integrate Flask API, ensure Flask API container is healthy and stable.
+[33md1d151a[m Ensure smooth operation of pipeline before GE integration
+[33m017dd00[m Edit readme files
+[33m46090aa[m move observability pipeline into checkpoints folder and rename it knightshift_foundation
+[33m0e5032a[m Fully modularize observability pipeline including own scripts, schemas, airflow, separate db. Ensure both observability and main pipelines run smoothly and independently.
+[33mba3d488[m Update README
+[33m054f495[m Modularize Observability, Add to Experiments folder, Remove all Prom/Grafana logic in main pipeline, Ensure pipeline operates as expected from both Observability_Sim and Infra/Compose
+[33m1c8fec9[m edit main project/pipeline files to remove prometheus logic and get pipeline working without prometheus/grafana hookup
+[33mb0822bb[m remove prometheus logic from ingestion script, and pipeline still works as expected
+[33maf5c126[m remove unnecessary call to run.sh in docker-compose.yml
+[33m16d7ca6[m Remove ruff from precommit hook
+[33mecd2a64[m clean up file structure (no structural change)
+[33ma10166a[m Use secrets from .env file, not from .txt files.
+[33m8b9c3e8[m remove annotations folder from tracking
+[33m05aa0ec[m[33m ([m[1;32mget_pipeline_running_perfectly[m[33m)[m Get pipeline working absolutely perfectly
+[33m0ac278d[m Get prometheus working perfectly, add metrics to ingestion, queryable via prom ui
+[33md4fd225[m Get airflow/docker working perfectly
+[33m7c6a7aa[m fix gh actions file
+[33me7fb410[m fix req
+[33m08912dd[m fix requirements
+[33mf4dd9ae[m fix requirements
+[33mdaa26fa[m fix requiements.txt
+[33m10ed465[m Loosen awscli version pin for CI compatibility
+[33m4ea3313[m Loosen awscli version pin for CI compatibility
+[33md95814e[m fix dependencies
+[33mf09875d[m Add CI job for pre-commit hooks
+[33m5a56191[m add more files to gitignore
+[33m376887e[m Remove IDE settings from Git
+[33m09e583c[m fix pre commit config yml
+[33mb57f9f8[m Add pre-commit hook
+[33m862d2b3[m Upgrade detect-secrets and fix pre-commit config
+[33m17b4b23[m python-ci.yml
+[33m15eca05[m python-ci.yml
+[33m07e6c9e[m Update main.yml
+[33m42e2c25[m python-ci.yml
+[33m74ab21f[m Add GitHub Actions workflow for Python CI
+[33m3ad1a3e[m refactor docker compose.yml
+[33m2a7430b[m Renamed schema files to follow naming convention
+[33mcafd8c8[m[33m ([m[1;33mtag: v0.2.0-pre-refactor[m[33m, [m[1;31morigin/backup-branch[m[33m, [m[1;32mphase-2-schema-refactor[m[33m, [m[1;32mbackup-branch[m[33m)[m Checkpoint before Phase 2 schema refactor
+[33mfa6a033[m Move backup.sh to root folder and commit to VC
+[33m881e88e[m Stop tracking backups/ folder and add to .gitignore
+[33me07d3cf[m Persist PyCharm PostgreSQL data source for KnightShift
+[33md47f5d8[m Polish: unify env management, clean gitignore, ignore project folders
+[33m7ff11ed[m refactor scripts
+[33mb91adc4[m Merge pull request #2 from okv627/feature/airflow-integration
+[33mdfe4caa[m[33m ([m[1;32mfeature/airflow-integration[m[33m)[m clean logging files
+[33m273ae82[m load timezone correctly for airflow
+[33m9d449c4[m Update changelog, add changes and updates to other important docs
+[33mfbe4711[m fix comment strip script
+[33m6519745[m Fix docker comppose yml file so Airflow is working again
+[33m7601863[m Merge pull request #1 from okv627/feature/airflow-integration
+[33m580897d[m Refactor all scripts 4/17
+[33me03268d[m Move Fernet key to env var; rotate key
+[33m4eddb72[m ignore airflow runtime logs and symlink
+[33m7337447[m Airlow up and running, create schedule
+[33m9a9548d[m Airflow up and running. DAG successful.
+[33m7e51928[m Add explorations folder for data models exploration
+[33mcbab104[m Final commit before Kubernetes exploration. Docker Compose stable
+[33m2e4b893[m[33m ([m[1;33mtag: stable-docker-v1[m[33m)[m add comments to root folder files
+[33ma4622d1[m add env files to git ignore
+[33m8e07b66[m finalize docker setup
+[33m3fa8494[m update changelog
+[33m0efe9f7[m add data dictionary, fix validation logic further
+[33m1828a92[m improve validation logic
+[33me53abe8[m fix moves and openings not being ingested
+[33m01e0aa7[m Add column in database for time of ingestion
+[33m73f0cd1[m initialize db with sql files if not exists
+[33m98c5c3c[m add pipeline.log
+[33m521db02[m extract build_game_data() and upsert_game() into src/db/game_upsert.py
+[33m8e881e2[m refactor scripts
+[33m36b141b[m add readme files for every folder
+[33m0807438[m Add schemas folder to track structural changes to database tables, clean up overall project structure
+[33mc601f1c[m move backfill script to enrichment folder
+[33m943a45e[m Refactor all scripts, add extra data cleaning steps
+[33mb910c2b[m Added more robust pauses to prevent rate limiting and additional summary statements at beginning of invalid_games.py
+[33mf26df29[m refactor and logging to add_users.py
+[33m3f362cd[m Add add_users.py so we have users data in users table
+[33m9faa014[m delete old update_all_games and replace it with new one
+[33m2581159[m Add logging for update_all_games
+[33m8c2d58f[m Make update_all_games.py update all fields, add other files like yaml etc
+[33m6a79c0b[m Initial commit with restored files
