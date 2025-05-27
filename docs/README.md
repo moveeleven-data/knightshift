@@ -10,6 +10,13 @@ and upsert logic.
 
 ---
 
+### 🎥 Demo: KnightShift in Action
+
+[![Watch the demo](KnightShift.jpg)](https://youtu.be/CAupEMTL6uY)  
+Click the thumbnail to watch a short video demo of the KnightShift data pipeline in action.
+
+---
+
 ## What It Does
 
 - Streams live chess games from multiple Lichess TV channels (e.g. blitz, rapid, horde).
