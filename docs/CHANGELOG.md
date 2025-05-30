@@ -2,6 +2,34 @@ Project Progress – KnightShift
 
 A running log of major development milestones, current state, and future plans for the KnightShift data pipeline.
 
+## May 29, 2025
+
+Planned Enhancement: Intermediary Logging for Observability & Validation
+
+Introduce a lightweight, database-native logging table to replace
+Prometheus/Grafana for tracking KnightShift pipeline metrics and
+validation results. Optimized for batch architecture.
+
+Table logs per-run stats: batch size, record count, duration, timestamp,
+validation status, anomalies. Enables auditability and historical trend analysis.
+
+Expose minimal Flask endpoints:
+
+/metrics — latest run snapshot (volume, duration, pass/fail)
+
+/healthcheck — boolean status based on latest outcome
+
+Optional future endpoints:
+
+/metrics/history — trend data
+
+/metrics/errors — failed validations
+
+Provides structured observability with minimal surface area.
+Enhances operational transparency and interview readiness.
+
+---
+
 ## May 21, 2025
 
 Today, I confirmed the stable startup of the Flask API container, ensuring full
