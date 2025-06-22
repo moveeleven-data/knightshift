@@ -25,9 +25,28 @@ LOGGER = setup_logger("game_upsert")
 
 
 def _parse_int(value: Any) -> Optional[int]:
-    """Cast to `int`, returning *None* if the cast fails / value is falsy."""
+    """
+    Safely parse a value into an integer, or return None if the input is missing or invalid.
+
+    Used to normalize raw PGN fields (like Elo ratings) that may be:
+    - Proper integers (e.g., 1500)
+    - Numeric strings (e.g., "2400")
+    - Empty strings, nulls, or bad data (e.g., "", "?", None)
+
+    Returns:
+        An integer if valid, otherwise None (for DB-safe null insert).
+    """
+    # Explicitly handle missing/null values (e.g., None from dict.get)
+    if value is None:
+        return None
+
+    # Handle empty or whitespace-only strings (e.g., "")
+    if isinstance(value, str) and value.strip() == "":
+        return None
+
+    # Attempt safe integer conversion; fail silently on invalid inputs like "?" or float strings
     try:
-        return int(value) if value not in (None, "") else None
+        return int(value)
     except (ValueError, TypeError):
         return None
 

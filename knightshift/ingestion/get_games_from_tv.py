@@ -132,75 +132,6 @@ HTTP.headers.update(
 
 
 # ──────────────────────────────────────────────────────────────────────────
-#   Helper functions
-# ──────────────────────────────────────────────────────────────────────────
-def _process_game_block(
-    pgn_lines: List[bytes], added: List[str], updated: List[str]
-) -> None:
-    """Parse a single PGN block and upsert it into Postgres."""
-    # Parse PGN lines into game data
-    game = parse_pgn_lines(pgn_lines)
-
-    if "site" not in game:  # sanity guard
-        return
-
-    # Build the database row from the parsed PGN data
-    db_row = build_game_data(game)
-
-    # Perform the upsert operation (insert or update)
-    was_updated = upsert_game(SESSION, TV_GAMES_TBL, db_row)
-
-    (updated if was_updated else added).append(db_row["id_game"])
-
-
-def _stream_channel(channel: str, added: List[str], updated: List[str]) -> None:
-    """Fetch a batch of games from one TV channel, handle retries & rate‑limits."""
-    url = f"https://lichess.org/api/tv/{channel}"
-    params = {"clocks": False, "opening": True}
-
-    for attempt in range(1, 4):  # max 3 retries
-        resp = HTTP.get(url, params=params, stream=True)
-        if resp.status_code == 429:  # too many requests → bail out
-            LOGGER.error("Rate‑limit (429) on '%s' – exiting", channel)
-            sys.exit(1)
-        if resp.ok:
-            break
-
-        LOGGER.warning(
-            "Channel '%s' returned %s (%s/3) – retrying in 5 s",
-            channel,
-            resp.status_code,
-            attempt,
-        )
-        time.sleep(5)
-    else:
-        LOGGER.error("Could not connect to '%s' after retries", channel)
-        return
-
-    _parse_stream(resp, added, updated)
-
-
-def _parse_stream(
-    resp: requests.Response, added: List[str], updated: List[str]
-) -> None:
-    """Detect game boundaries (blank line + move line) and upsert each game."""
-    pgn_block: list[bytes] = []
-
-    for raw in resp.iter_lines():
-        if not raw:
-            continue  # keep buffering until we hit a move line
-
-        line = raw.decode().strip()
-        LOGGER.debug("PGN %s", line)
-        pgn_block.append(raw)
-
-        # in Lichess streaming API the first move ("1. …") ends the header
-        if line.startswith("1. "):
-            _process_game_block(pgn_block, added, updated)
-            pgn_block.clear()
-
-
-# ──────────────────────────────────────────────────────────────────────────
 #   Main ingestion loop
 # ──────────────────────────────────────────────────────────────────────────
 def run_tv_ingestion() -> None:
@@ -229,6 +160,90 @@ def run_tv_ingestion() -> None:
         time.sleep(SLEEP_INTERVAL)
 
     LOGGER.info("TIME_LIMIT (%s s) reached – stopping ingestion", TIME_LIMIT)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+#   Helper functions
+# ──────────────────────────────────────────────────────────────────────────
+
+
+# ──────────────────────────────────────────────────────────────────────────
+#   Step 1: Fetch PGN stream for one channel
+# ──────────────────────────────────────────────────────────────────────────
+def _stream_channel(channel: str, added: List[str], updated: List[str]) -> None:
+    """Fetch a batch of games from one TV channel, handle retries & rate‑limits."""
+    url = f"https://lichess.org/api/tv/{channel}"
+    params = {"clocks": False, "opening": True}
+
+    for attempt in range(1, 4):  # max 3 retries
+        resp = HTTP.get(url, params=params, stream=True)
+        if resp.status_code == 429:  # too many requests → bail out
+            LOGGER.error("Rate‑limit (429) on '%s' – exiting", channel)
+            sys.exit(1)
+        if resp.ok:
+            break
+
+        LOGGER.warning(
+            "Channel '%s' returned %s (%s/3) – retrying in 5 s",
+            channel,
+            resp.status_code,
+            attempt,
+        )
+        time.sleep(5)
+    else:
+        LOGGER.error("Could not connect to '%s' after retries", channel)
+        return
+
+    _parse_stream(resp, added, updated)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+#   Step 2: Parse raw PGN lines into game blocks
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def _parse_stream(
+    resp: requests.Response, added: List[str], updated: List[str]
+) -> None:
+    """Detect game boundaries (blank line + move line) and upsert each game."""
+    pgn_block: list[bytes] = []
+
+    for raw in resp.iter_lines():
+        if not raw:
+            continue  # keep buffering until we hit a move line
+
+        line = raw.decode().strip()
+        LOGGER.debug("PGN %s", line)
+        pgn_block.append(raw)
+
+        # in Lichess streaming API the first move ("1. …") ends the header
+        if line.startswith("1. "):
+            _process_game_block(pgn_block, added, updated)
+            pgn_block.clear()
+
+
+# ──────────────────────────────────────────────────────────────────────────
+#   Step 3: Parse & upsert one PGN block
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def _process_game_block(
+    pgn_lines: List[bytes], added: List[str], updated: List[str]
+) -> None:
+    """Parse a single PGN block and upsert it into Postgres."""
+    # Parse PGN lines into game data
+    game = parse_pgn_lines(pgn_lines)
+
+    if "site" not in game:  # sanity guard
+        return
+
+    # Build the database row from the parsed PGN data
+    db_row = build_game_data(game)
+
+    # Perform the upsert operation (insert or update)
+    was_updated = upsert_game(SESSION, TV_GAMES_TBL, db_row)
+
+    (updated if was_updated else added).append(db_row["id_game"])
 
 
 # ──────────────────────────────────────────────────────────────────────────
