@@ -14,7 +14,7 @@ x-common-env: &common_env
 services:
   db:
     image: postgres:17
-    restart: always
+    restart: "no"
     environment:
       POSTGRES_USER: ${PGUSER:-postgres}
       POSTGRES_PASSWORD: ${PGPASSWORD}
@@ -64,7 +64,7 @@ services:
     build:
       context: ../..
       dockerfile: infra/docker/airflow.Dockerfile
-    restart: always
+    restart: "no"
     depends_on:
       - db
     environment:
