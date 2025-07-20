@@ -14,7 +14,7 @@ x-common-env: &common_env
 services:
   db:
     image: postgres:17
-    restart: always
+    restart: "no"
     environment:
       POSTGRES_USER: ${PGUSER:-postgres}
       POSTGRES_PASSWORD: ${PGPASSWORD}
@@ -26,21 +26,6 @@ services:
       - ../../schemas/init:/docker-entrypoint-initdb.d
     env_file:
       - .env
-    networks:
-      - knightshift_network
-
-  flask-api:
-    build:
-      context: ../../flask_api
-      dockerfile: Dockerfile
-    ports:
-      - "5000:5000"
-    depends_on:
-      - db
-    environment:
-      DATABASE_URL: postgresql+psycopg2://${PGUSER}:${PGPASSWORD}@db:5432/${PGDATABASE:-knightshift}
-    volumes:
-      - ../../flask_api:/app
     networks:
       - knightshift_network
 
@@ -64,7 +49,7 @@ services:
     build:
       context: ../..
       dockerfile: infra/docker/airflow.Dockerfile
-    restart: always
+    restart: "no"
     depends_on:
       - db
     environment:

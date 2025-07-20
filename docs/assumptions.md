@@ -1,6 +1,6 @@
 # KnightShift – Assumptions, Risks, and Failure Handling
 
-This document outlines key architectural assumptions, known failure points, and how the KnightShift pipeline currently handles (or plans to handle) them.
+This document outlines key architectural assumptions and how the KnightShift pipeline currently handles them.
 
 ---
 
@@ -42,25 +42,12 @@ This document outlines key architectural assumptions, known failure points, and 
 
 - Secrets are stored securely in AWS Secrets Manager, and `.env.local` is not committed to Git.
 - Use the RUNNING_IN_DOCKER=true flag to switch DB host logic (localhost vs. db)
-- Use `docker compose down -v` carefully, as it **permanently deletes Postgres data** unless backed up.
+- Use `docker compose down -v` carefully, as it permanently deletes Postgres data unless backed up.
 
 ---
 
-## Logging as a Diagnostic Tool
+## Logging
 
 - All ingestion, cleaning, and enrichment logs are written to `logs/pipeline.log`.
 - Each script has its own logger via `logging_utils.py`.
 - Docker logs are visible via `docker compose logs pipeline` or `docker logs`.
-
----
-
-## Future Resilience Goals (Phase 2+)
-
-- Graceful recovery from DB or API downtime
-- Retry queues or stream buffering (i.e. Kafka)
-- Archival of failed/invalid records
-- Prometheus + Grafana for health monitoring
-- Alerting if ingestion drops to zero
-
----
-

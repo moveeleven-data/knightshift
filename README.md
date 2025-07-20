@@ -12,7 +12,7 @@ and upsert logic.
 
 ### 🎥 Demo: KnightShift in Action
 
-[![Watch the demo](KnightShift.jpg)](https://youtu.be/CAupEMTL6uY)  
+[![Watch the demo](docs/KnightShift.jpg)](https://youtu.be/CAupEMTL6uY)  
 Click the thumbnail to watch a short video demo of the KnightShift data pipeline in action.
 
 ---
@@ -71,7 +71,7 @@ Expected secret format:
   "PGPORT": "5432",
   "PGDATABASE": "your-db-name",
   "PGUSER": "your-username",
-  "PGPASSWORD": "your-password"
+  "PGPASSWORD": "your-password"    <!-- pragma: allowlist secret -->
 }
 ```
 
@@ -168,78 +168,6 @@ docker compose up --build
 
 ---
 
-## Future Expansion: Chess Analytics Pipeline (Multi-Source)
-
-This project will evolve into a full **Chess Analytics Pipeline** with:
-
-### Multiple Data Sources
-
-- **Lichess (Real-Time):** PGN from TV stream and export API
-- **Kaggle Archive:** Millions of historical games
-- **FIDE Ratings:** Public CSVs with official player data
-
-### Architecture Components
-
-- **Staging in RDS (PostgreSQL)**
-- **Raw Data in S3 Buckets**
-- **Transformation Jobs via AWS Glue or Python**
-- **Partitioned Tables & Concurrency Controls**
-- **Analytics Layer in Redshift or a second Postgres**
-- **Dashboards with AWS QuickSight**
-
-### Planned Expansion by Month
-
-**Month 1:**
-
-- Refactor ingestion scripts
-- Local Docker + Postgres setup
-- Create first working Dockerfile
-
-**Month 2:**
-
-- Automate ingestion via cron or Airflow (locally)
-- Add simple data validation (e.g. ELO range checks)
-
-**Month 3:**
-
-- Partition Postgres by date
-- Add concurrency safety (transactions or row locks)
-- Add full PGN enrichment via Lichess export API
-
-**Month 4:**
-
-- Deploy ingestion & enrichment in Kubernetes (Minikube/Kind)
-- Run Airflow inside K8s cluster
-
-**Month 5:**
-
-- Add Great Expectations for data quality
-- Monitor jobs with Prometheus & Grafana
-
-**Month 6:**
-
-- Load to Redshift or warehouse instance
-- Create aggregated views (fact/dimension tables)
-- Build public dashboards with QuickSight
-
----
-
-## Final Goal
-
-Build a robust, multi-source chess data pipeline capable of:
-
-- Continuous real-time ingestion
-- Historical + official data merging
-- Schema evolution
-- Analytics-ready warehousing
-- Production-grade monitoring
-- BI dashboards
-
----
-
 ## Built By
 
 [Matthew Tripodi](https://github.com/okv627)
-
-Let me know if you’d like to see the public dashboard or learn more about
-the architecture behind KnightShift.

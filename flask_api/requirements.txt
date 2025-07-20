@@ -1,5 +1,0 @@
-flask==2.2.5
-flask_sqlalchemy==3.0.3
-psycopg2-binary==2.9.3
-werkzeug==2.2.3
-SQLAlchemy==1.4.51
