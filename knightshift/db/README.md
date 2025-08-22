@@ -1,4 +1,4 @@
-# 📦 src/db
+# src/db
 
 This module contains reusable, low-level database logic for the KnightShift pipeline.
 
@@ -27,3 +27,4 @@ from knightshift.db.game_upsert import build_game_data, upsert_game
 
 game_data = build_game_data(parsed_game)
 was_updated = upsert_game(session, tv_channel_games_table, game_data)
+```

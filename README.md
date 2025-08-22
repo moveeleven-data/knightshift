@@ -71,17 +71,9 @@ Expected secret format:
   "PGPORT": "5432",
   "PGDATABASE": "your-db-name",
   "PGUSER": "your-username",
-  "PGPASSWORD": "your-password"    <!-- pragma: allowlist secret -->
+  "PGPASSWORD": "your-password"
 }
 ```
-
-Expected .env file (local development)**
-
-A sample template is provided at `config/.env.template`.
-
-# create your personal copy in the project root
-cp config/.env.template .env
-# then edit .env and add your real credentials / API keys
 
 ---
 

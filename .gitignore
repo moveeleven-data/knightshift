@@ -85,9 +85,10 @@ Thumbs.db
 # ────────────── Project Archive / Explorations ──────────────
 notebooks/
 knightshift/archive/
-docs/archive/
+annotations/archive/
 annotations/
 checkpoints/knightshift_foundation/.env
+infra/composer/airflow/
 
 # ────────────── Git Safety ──────────────
 .git/
