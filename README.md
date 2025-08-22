@@ -1,43 +1,67 @@
-# KnightShift: Lichess Data Pipeline
+# Knightshift: Lichess Data Pipeline
 
-KnightShift is a production-style chess data pipeline that ingests real-time
-Lichess TV games, parses PGN data, and stores structured game records in a
-PostgreSQL database.
-
-This project simulates real-world data engineering practices—secure
-secrets management, stream-style ingestion, schema-aware transformation,
-and upsert logic.
+Turn real-time chess games into structured, analytics-ready records — orchestrated with Airflow.
 
 ---
 
-### 🎥 Demo: KnightShift in Action
+## ▷ See It in Action (2-min demo)
 
-[![Watch the demo](docs/KnightShift.jpg)](https://youtu.be/CAupEMTL6uY)  
-Click the thumbnail to watch a short video demo of the KnightShift data pipeline in action.
-
----
-
-## What It Does
-
-- Streams live chess games from multiple Lichess TV channels (e.g. blitz, rapid, horde).
-- Parses PGN-formatted chess data into structured records.
-- Transforms raw PGN into a clean schema: player names, ratings, results, time control, etc.
-- Performs upserts into PostgreSQL using SQLAlchemy Core.
-- Uses AWS Secrets Manager to securely load DB credentials.
+[![Watch the demo](docs/KnightShift.jpg)](https://youtu.be/CAupEMTL6uY)
 
 ---
 
-## Tech Stack
+## How It Works
 
-- **Python 3.10+**
-- **PostgreSQL**
-- **SQLAlchemy Core**
-- **AWS Secrets Manager** (`boto3`)
-- **Requests** (API interaction)
+**Ingest:** stream live games from Lichess TV channels (blitz, rapid, horde).  
+**Parse:** convert PGN chess notation into structured records.  
+**Transform:** extract player names, ratings, results, time controls, and metadata.  
+**Store:** upsert into PostgreSQL with SQLAlchemy Core, maintaining clean and deduplicated tables.  
+**Protect:** load credentials securely from AWS Secrets Manager or local `.env`.
 
 ---
 
-## Project Structure
+## Key Features
+
+| Capability | What you get |
+|------------|--------------|
+| Streaming ingestion | Live games pulled from multiple Lichess TV feeds |
+| PGN parsing & schema | Move-by-move chess data structured into relational form |
+| Upserts & deduplication | SQLAlchemy logic ensures clean, reproducible tables |
+| Secrets management | Credentials from AWS Secrets Manager or `.env` |
+| Airflow orchestration | Optional DAGs schedule ingestion and monitoring |
+
+---
+
+## Run It Yourself
+
+### Quickstart (Local Python)
+
+1. Provision a PostgreSQL database and store credentials in AWS Secrets Manager (or a local `.env`).
+
+2. Install dependencies:
+
+   ```
+   pip install -r requirements.txt
+   ```
+
+3. Run the pipeline:
+
+   ```
+   python main.py
+   ```
+
+The pipeline fetches games every 40 seconds for 5 hours and writes them to Postgres.
+
+---
+
+### Orchestrated Setup (Docker Compose + Airflow)
+
+Knightshift can also run as a full stack with Postgres, Airflow, and the ingestion worker via docker compose.
+See [infra/README.md](infra/README.md) for instructions, including restoring Grafana dashboards and managing secrets.
+
+---
+
+### Project Layout
 
 ```
 knightshift/
@@ -59,11 +83,7 @@ knightshift/
 
 ---
 
-## Secrets Management
-
-The KnightShift pipeline securely pulls database credentials from **AWS Secrets Manager** or a local **`.env`** file, depending on the environment.
-
-Expected secret format:
+### Code Snippet: Expected Secret Format
 
 ```json
 {
@@ -77,89 +97,16 @@ Expected secret format:
 
 ---
 
-## How to Run
+### Tech Stack
 
-1. Create a Postgres database and store credentials in AWS Secrets Manager.
-
-2. Install Python dependencies:
-
-   ```
-   pip install -r requirements.txt
-   ```
-
-3. Run the pipeline:
-
-   ```
-   python main.py
-   ```
-
-The pipeline fetches Lichess games every 40 seconds for 5 hours, 
-processes them, and stores them in your Postgres database.
+- **Python 3.10+**
+- **PostgreSQL**
+- **SQLAlchemy Core**
+- **AWS Secrets Manager** (`boto3`)
+- **Requests** (API interaction)
 
 ---
 
-## How to Run with Docker Compose (Airflow + Pipeline)
-
-KnightShift now runs via Docker Compose, orchestrating Postgres, Airflow, and the ingestion worker together.
-
-### Steps
-
-1. Ensure `.env` exists in the project root (copied from the template).
-
-2. (Windows only) Fix line endings in `run.sh`:
-
-dos2unix run.sh
-
-Build and start all services:
-
-docker compose up --build
-
-This will automatically:
-- Spin up a local Postgres container
-- Launch Airflow (Scheduler, Webserver, Worker)
-- Register and schedule the KnightShift ingestion DAG
-- Begin streaming games and writing them to Postgres
-
-Access Airflow UI
-Open your browser and go to:
-http://localhost:8080
-Username: admin
-Password: admin
-      
----
-
-Secrets Detection:
-
-This project uses detect-secrets to prevent committing sensitive data. Known secrets are tracked in .secrets.baseline, which suppresses repeat alerts. If secrets are rotated or removed, regenerate the baseline using detect-secrets scan > .secrets.baseline. This helps maintain security without adding noise to the commit process.
- 
----
-
-Restoring Grafana Dashboard from Backup
-
-If you’ve torn down the stack or lost your Grafana dashboard, restore it with the backup located at:
-
-/backups/grafana/grafana_backup_2025-05-03.tar.gz
-       
-
-To restore:
-
-Stop any running containers:
-docker compose down
-        
-
-Restore the Grafana data volume:
-docker run --rm \
--v compose_grafana_data:/volume \
--v $(pwd)/backups/grafana:/backup \
-alpine \
-sh -c "rm -rf /volume/* && tar xzf /backup/grafana_backup_2025-05-03.tar.gz -C /volume"
-           
-
-Rebuild and launch the stack:
-docker compose up --build
-
----
-
-## Built By
+### Built By
 
 [Matthew Tripodi](https://github.com/okv627)

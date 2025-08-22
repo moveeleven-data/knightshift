@@ -34,7 +34,7 @@ Tracks structural changes to database tables (DDL) that impact table creation, e
 - Index: `idx_updated`
 - Enables fast filtering during enrichment/validation passes.
 
----
+----
 
 ## 2025-03-31
 
