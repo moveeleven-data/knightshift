@@ -6,9 +6,13 @@
 
 ---
 
-## ▷ See It in Action (2-min demo)
+<h3 align="center" style="font-size:1.4em;">▷ See It in Action (2-min demo)</h3>
 
-[![Watch the demo](docs/KnightShift.jpg)](https://youtu.be/CAupEMTL6uY)
+<p align="center">
+  <a href="https://youtu.be/CAupEMTL6uY">
+    <img src="docs/KnightShift.jpg" alt="Knightshift demo thumbnail" width="300"/>
+  </a>
+</p>
 
 ---
 
