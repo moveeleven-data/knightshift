@@ -30,10 +30,10 @@
 | Capability | What you get |
 |------------|--------------|
 | Streaming ingestion | Live games pulled from multiple Lichess TV feeds |
-| PGN parsing & schema | Move-by-move chess data structured into relational form |
-| Upserts & deduplication | SQLAlchemy logic ensures clean, reproducible tables |
-| Secrets management | Credentials from AWS Secrets Manager or `.env` |
-| Airflow orchestration | Optional DAGs schedule ingestion and monitoring |
+| PGN parsing | Move-by-move chess data structured into relational form |
+| Deduplication | SQLAlchemy logic ensures clean tables |
+| Security | Credentials from AWS Secrets Manager |
+| Orchestration | Airflow DAGs schedule ingestion and monitoring |
 
 
 
