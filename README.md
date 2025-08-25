@@ -4,9 +4,8 @@
   Turn live Lichess games into structured, analytics-ready records — orchestrated with Airflow.
 </p>
 
----
 
-<h3 align="center" style="font-size:1.4em;">▷ See It in Action (2-min demo)</h3>
+<p align="center"><b>▷ See It in Action (2-min demo)</b></p>
 
 <p align="center">
   <a href="https://youtu.be/CAupEMTL6uY">
@@ -24,7 +23,7 @@
 **Store:** upsert into PostgreSQL with SQLAlchemy Core, maintaining clean and deduplicated tables.  
 **Protect:** load credentials securely from AWS Secrets Manager or local `.env`.
 
----
+
 
 ## Key Features
 
@@ -36,7 +35,7 @@
 | Secrets management | Credentials from AWS Secrets Manager or `.env` |
 | Airflow orchestration | Optional DAGs schedule ingestion and monitoring |
 
----
+
 
 ## Run It Yourself
 
@@ -58,14 +57,14 @@
 
 The pipeline fetches games every 40 seconds for 5 hours and writes them to Postgres.
 
----
+
 
 ### Orchestrated Setup (Docker Compose + Airflow)
 
 Knightshift can also run as a full stack with Postgres, Airflow, and the ingestion worker via docker compose.
 See [infra/README.md](infra/README.md) for instructions, including restoring Grafana dashboards and managing secrets.
 
----
+
 
 ### Project Layout
 
@@ -87,7 +86,7 @@ knightshift/
 └── scripts/                    # Utility scripts (e.g., run scripts)
 ```
 
----
+
 
 ### Code Snippet: Expected Secret Format
 
@@ -101,18 +100,20 @@ knightshift/
 }
 ```
 
----
+
 
 ### Tech Stack
 
-- **Python 3.10+**
-- **PostgreSQL**
-- **SQLAlchemy Core**
-- **AWS Secrets Manager** (`boto3`)
-- **Requests** (API interaction)
+- Python 3.10+
+- PostgreSQL
+- SQLAlchemy Core
+- AWS Secrets Manager (`boto3`)
+- Requests (API interaction)
 
 ---
 
-### Built By
-
-[Matthew Tripodi](https://github.com/okv627)
+<p align="center">
+  <a href="https://github.com/moveeleven-data/knightshift/actions/workflows/main.yml">
+    <img src="https://github.com/moveeleven-data/knightshift/actions/workflows/main.yml/badge.svg?branch=master" alt="CI status"/>
+  </a>
+</p>
