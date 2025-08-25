@@ -62,29 +62,8 @@ The pipeline fetches games every 40 seconds for 5 hours and writes them to Postg
 ### Orchestrated Setup (Docker Compose + Airflow)
 
 Knightshift can also run as a full stack with Postgres, Airflow, and the ingestion worker via docker compose.
-See [infra/README.md](infra/README.md) for instructions, including restoring Grafana dashboards and managing secrets.
+See [infra/README.md](infra/README.md) for instructions, including restoring Grafana dashboards.
 
-
-
-### Project Layout
-
-```
-knightshift/
-├── airflow/
-│   ├── dags/                   # Airflow DAGs
-│   ├── logs/                   # Task and execution logs
-│   ├── plugins/                # Airflow custom plugins
-├── annotations/                # Annotations and exploration docs
-├── backups/                    # Backup logs and files
-├── config/                     # Configuration files
-├── docs/                       # Documentation (e.g., changelogs, architecture)
-├── explorations/               # Exploration of data models (e.g., NoSQL, Graph)
-├── infra/                      # Infrastructure configuration (Docker, Compose)
-├── knightshift/                # Core pipeline scripts (ingestion, cleaning, enrichment)
-├── logs/                       # Pipeline logs
-├── schemas/                    # Database schemas and migrations
-└── scripts/                    # Utility scripts (e.g., run scripts)
-```
 
 
 
