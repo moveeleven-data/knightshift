@@ -1,6 +1,8 @@
-# Knightshift: Lichess Data Pipeline
+<h1 align="center">Knightshift: Chess Analytics Pipeline</h1>
 
-Turn real-time chess games into structured, analytics-ready records — orchestrated with Airflow.
+<p align="center">
+  Turn live Lichess games into structured, analytics-ready records — orchestrated with Airflow.
+</p>
 
 ---
 
