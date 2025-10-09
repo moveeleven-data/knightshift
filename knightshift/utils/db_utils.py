@@ -76,8 +76,8 @@ def get_database_url(creds: Dict[str, str]) -> str:
     postgresql+psycopg2://user:password@localhost:5432/knightshift
     """
     return (
-        "postgresql+psycopg2://{PGUSER}:{PGPASSWORD}" "@{PGHOST}:{PGPORT}/{PGDATABASE}"
-    ).format(
+        "postgresql+psycopg2://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}"
+    ).format(  # noqa: E501
         PGUSER=creds["PGUSER"],
         PGPASSWORD=creds["PGPASSWORD"],  # pragma: allowlist secret
         PGHOST=creds.get("PGHOST", "localhost"),
