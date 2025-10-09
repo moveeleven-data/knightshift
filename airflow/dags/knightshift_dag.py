@@ -19,7 +19,6 @@ load_dotenv(ENV_FILE, override=True)
 # Database Health Check
 # =============================================================================
 
-
 def check_database_health() -> None:
     """
     Ensure PostgreSQL is reachable and `tv_channel_games` has records.
@@ -54,7 +53,6 @@ def check_database_health() -> None:
 # =============================================================================
 # Helpers
 # =============================================================================
-
 
 def _run_script(script_path: str) -> None:
     """
