@@ -7,14 +7,8 @@
 #   • Return True on update, False on insert or failure
 # ==============================================================================
 
-from __future__ import annotations
-
-from datetime import datetime, date, time
-from typing import Any, Dict, Optional
-
+from datetime import datetime
 from sqlalchemy import Table, select, update
-from sqlalchemy.orm import Session
-
 from knightshift.utils.logging_utils import setup_logger
 
 LOGGER = setup_logger("game_upsert")
@@ -24,15 +18,7 @@ LOGGER = setup_logger("game_upsert")
 # ------------------------------------------------------------------------------
 
 
-def _parse_int(value: Any) -> Optional[int]:
-    """
-    Safely cast a value to int, or return None if invalid.
-
-    Handles:
-      • Integers (1500)
-      • Numeric strings ("2400")
-      • Empty strings, nulls, "?" → None
-    """
+def _parse_int(value):
     if value is None:
         return None
     if isinstance(value, str) and not value.strip():
@@ -43,10 +29,10 @@ def _parse_int(value: Any) -> Optional[int]:
         return None
 
 
-def _parse_date(value: str | None, fmt: str = "%Y.%m.%d") -> Optional[date]:
-    """Parse a YYYY.MM.DD string to date, else None."""
+def _parse_date(value, fmt="%Y.%m.%d"):
     if not value:
         return None
+    from datetime import datetime
     try:
         return datetime.strptime(value, fmt).date()
     except ValueError:
@@ -54,10 +40,10 @@ def _parse_date(value: str | None, fmt: str = "%Y.%m.%d") -> Optional[date]:
         return None
 
 
-def _parse_time(value: str | None, fmt: str = "%H:%M:%S") -> Optional[time]:
-    """Parse an HH:MM:SS string to time, else None."""
+def _parse_time(value, fmt="%H:%M:%S"):
     if not value:
         return None
+    from datetime import datetime
     try:
         return datetime.strptime(value, fmt).time()
     except ValueError:
@@ -70,8 +56,7 @@ def _parse_time(value: str | None, fmt: str = "%H:%M:%S") -> Optional[time]:
 # ------------------------------------------------------------------------------
 
 
-def build_game_data(raw: Dict[str, Any]) -> Dict[str, Any]:
-    """Normalise raw PGN dict into DB-ready column → value mapping."""
+def build_game_data(raw):
     return {
         "id_game": raw.get("site", "").split("/")[-1],
         "val_event_name": raw.get("event", ""),
@@ -96,16 +81,7 @@ def build_game_data(raw: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def upsert_game(session: Session, table: Table, game: Dict[str, Any]) -> bool:
-    """
-    Insert or update a single game row.
-
-    Returns
-    -------
-    bool
-        True if an existing row was updated,
-        False on insert or error.
-    """
+def upsert_game(session, table, game):
     game_id = game.get("id_game")
     if not game_id:
         LOGGER.warning("Missing game ID – skipping row.")
