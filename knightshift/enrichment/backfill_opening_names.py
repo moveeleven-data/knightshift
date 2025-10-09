@@ -11,13 +11,10 @@
 #   4. Upsert updates into tv_channel_games
 # ==============================================================================
 
-from __future__ import annotations
-
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Set, Tuple
 
 import requests
 from dotenv import load_dotenv
@@ -71,11 +68,11 @@ GAMES_TABLE = Table(
 # Config
 # ------------------------------------------------------------------------------
 
-TIME_PER_GAME = 0.5  # seconds per game
+TIME_PER_GAME = 0.5
 BATCH_SIZE = 3_000
-BATCH_PAUSE = 15 * 60  # seconds
-PROGRESS_INTERVAL = 30  # seconds
-SCRIPT_TIME_LIMIT = 30  # seconds
+BATCH_PAUSE = 15 * 60
+PROGRESS_INTERVAL = 30
+SCRIPT_TIME_LIMIT = 30
 
 # ------------------------------------------------------------------------------
 # HTTP Session
@@ -88,8 +85,7 @@ HTTP.headers.update({"Content-Type": "application/x-www-form-urlencoded"})
 # Helpers
 # ==============================================================================
 
-
-def _collect_unprofiled_games() -> Set[str]:
+def _collect_unprofiled_games():
     """Return set of game IDs missing opening/eco/elo information."""
     query = select(GAMES_TABLE.c.id_game).where(
         (GAMES_TABLE.c.val_opening_name.is_(None))
@@ -104,27 +100,20 @@ def _collect_unprofiled_games() -> Set[str]:
     try:
         with SESSION() as session:
             rows = session.execute(query).fetchall()
-            game_ids = {row[0] for row in rows}
-            if game_ids:
-                LOGGER.info("Found %d games to update.", len(game_ids))
-            else:
-                LOGGER.info("No games need updating.")
-            return game_ids
+            return {row[0] for row in rows}
     except Exception as exc:
         LOGGER.error("Error fetching unprofiled games: %s", exc)
         return set()
 
 
-def _fetch_opening_info(game_id: str) -> Tuple[str, str, str, str]:
+def _fetch_opening_info(game_id):
     """Fetch ECO code, opening name, and Elo ratings for one game via Lichess API."""
     url = f"https://lichess.org/game/export/{game_id}"
     params = {"moves": "true", "opening": "true"}
-    LOGGER.debug("Fetching opening info for game %s", game_id)
 
     try:
         resp = HTTP.get(url, params=params)
         resp.raise_for_status()
-        LOGGER.debug("Response for game %s: %s", game_id, resp.text)
 
         eco_code = opening_name = elo_white = elo_black = None
         for line in resp.text.splitlines():
@@ -146,9 +135,7 @@ def _fetch_opening_info(game_id: str) -> Tuple[str, str, str, str]:
     return None, None, None, None
 
 
-def _update_opening_info(
-    game_id: str, eco_code: str, opening_name: str, elo_white: str, elo_black: str
-) -> None:
+def _update_opening_info(game_id, eco_code, opening_name, elo_white, elo_black):
     """Upsert ECO/opening/elo info for a game."""
     game_data = {
         "id_game": game_id,
@@ -162,22 +149,16 @@ def _update_opening_info(
     try:
         with SESSION() as session:
             if eco_code and opening_name:
-                updated = upsert_game(session, GAMES_TABLE, game_data)
-                if updated:
-                    LOGGER.info("Updated game %s", game_id)
-                else:
-                    LOGGER.warning("No changes applied for game %s", game_id)
-            else:
-                LOGGER.warning("Missing opening info for game %s", game_id)
+                upsert_game(session, GAMES_TABLE, game_data)
             session.commit()
     except Exception as exc:
         LOGGER.error("Update error for game %s: %s", game_id, exc)
 
 
-def _process(game_ids: Set[str]) -> None:
+def _process(game_ids):
     """Process all unprofiled games with rate limiting and progress logs."""
     total = len(game_ids)
-    LOGGER.info("Updating %d games (ETA %.1f s)", total, total * TIME_PER_GAME)
+    LOGGER.info("Updating %d games", total)
 
     start, last_log = time.time(), time.time()
     processed = 0
@@ -193,24 +174,19 @@ def _process(game_ids: Set[str]) -> None:
             processed += 1
 
         if time.time() - last_log > PROGRESS_INTERVAL:
-            LOGGER.info(
-                "Progress %d/%d (remaining %d)", processed, total, total - processed
-            )
+            LOGGER.info("Progress %d/%d", processed, total)
             last_log = time.time()
 
         time.sleep(TIME_PER_GAME)
 
         if processed and processed % BATCH_SIZE == 0:
-            LOGGER.info(
-                "Processed %d games – pausing %d min", processed, BATCH_PAUSE // 60
-            )
+            LOGGER.info("Cooling off for %d min", BATCH_PAUSE // 60)
             time.sleep(BATCH_PAUSE)
 
     LOGGER.info("Finished processing %d games", processed)
 
 
-def run_backfill_opening_names() -> None:
-    """Main runner for backfilling opening names."""
+def run_backfill_opening_names():
     game_ids = _collect_unprofiled_games()
     if not game_ids:
         LOGGER.info("All opening info is up-to-date.")
