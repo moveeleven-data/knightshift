@@ -1,61 +1,57 @@
-# src/utils/db_utils.py
-"""
-Tiny helper module for **all** DB / secret look‑ups.
-
-Keeps PG connection info in one place and hides the AWS Secrets Manager
-plumbing from the rest of the code‑base.
-─────────────────────────────────────────────────────────────────────────
-Public helpers
-──────────────
-load_db_credentials()   -> Dict[str, str]
-get_database_url(creds) -> str
-get_lichess_token()     -> Optional[str]
-"""
+# ==============================================================================
+# db_utils.py  –  Tiny helper for DB and secret lookups
+#
+# Centralizes:
+#   • Postgres connection info
+#   • AWS Secrets Manager plumbing
+#   • Lichess API token retrieval
+# ==============================================================================
 
 from __future__ import annotations
 
 import json
 import os
-from typing import Dict, Any, Optional
+from pathlib import Path
+from typing import Dict, Optional
 
 import boto3
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
-from pathlib import Path
 
-# Load .env.* as early as possible so every import sees the variables
-ROOT_ENV = Path(__file__).resolve().parents[2] / ".env"  # …/knightshift/.env
-load_dotenv(dotenv_path=ROOT_ENV, override=False)  # env wins over file
+ROOT_ENV = Path(__file__).resolve().parents[2] / ".env"
+load_dotenv(dotenv_path=ROOT_ENV, override=False)  # env values override file
 
-# ──────────────────────────────────────────────────────────────────────
-# Constants
-# ──────────────────────────────────────────────────────────────────────
 _SECRET_NAME: str = os.getenv("DB_SECRET_NAME", "LichessDBCreds")
 _REGION: str = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
 _DOCKER_MODE: bool = os.getenv("RUNNING_IN_DOCKER", "false").lower() == "true"
 
 
-# ──────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 # Internal helpers
-# ──────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
+
+
 def _bool_env(var_name: str, default: str = "false") -> bool:
-    """Convert `TRUE / true / 1`‑like strings to bool."""
+    """Convert TRUE / true / 1 style env vars to bool."""
     return os.getenv(var_name, default).strip().lower() in {"1", "true", "yes"}
 
 
-# ──────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
 # Public API
-# ──────────────────────────────────────────────────────────────────────
+# ------------------------------------------------------------------------------
+
+
 def load_db_credentials(
     secret_name: str = _SECRET_NAME,
     region_name: str = _REGION,
 ) -> Dict[str, str]:
     """
-    Fetch the Postgres credentials JSON from **AWS Secrets Manager**.
+    Fetch Postgres credentials JSON from AWS Secrets Manager.
 
-    If the code is running inside Docker Compose (detected via
-    *RUNNING_IN_DOCKER=true*), we **override** ``PGHOST`` with *db* so it
-    points at the Postgres service on the internal compose network.
+    Notes
+    -----
+    • If running in Docker Compose (*RUNNING_IN_DOCKER=true*),
+      override ``PGHOST`` with ``db`` to point at the Postgres service.
     """
     client = boto3.session.Session().client("secretsmanager", region_name=region_name)
 
@@ -63,27 +59,27 @@ def load_db_credentials(
         response = client.get_secret_value(SecretId=secret_name)
         creds: Dict[str, str] = json.loads(response["SecretString"])
     except ClientError as exc:
-        # Fail fast – the caller can decide how to recover / exit
         raise RuntimeError(f"Failed to load secret `{secret_name}`") from exc
 
     if _DOCKER_MODE:
-        # Must match the service name in docker‑compose.yml
-        creds["PGHOST"] = "db"
+        creds["PGHOST"] = "db"  # must match service name in docker-compose.yml
 
     return creds
 
 
 def get_database_url(creds: Dict[str, str]) -> str:
     """
-    Build a SQLAlchemy URL **psycopg2 driver** string from the creds dict.
-    Example:
-       postgresql+psycopg2://postgres:postgres@localhost:5432/knightshift
+    Build a SQLAlchemy psycopg2 connection URL from credentials.
+
+    Example
+    -------
+    postgresql+psycopg2://user:password@localhost:5432/knightshift
     """
     return (
-        "postgresql+psycopg2://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}"
+        "postgresql+psycopg2://{PGUSER}:{PGPASSWORD}" "@{PGHOST}:{PGPORT}/{PGDATABASE}"
     ).format(
         PGUSER=creds["PGUSER"],
-        PGPASSWORD=creds["PGPASSWORD"],
+        PGPASSWORD=creds["PGPASSWORD"],  # pragma: allowlist secret
         PGHOST=creds.get("PGHOST", "localhost"),
         PGPORT=creds.get("PGPORT", "5432"),
         PGDATABASE=creds["PGDATABASE"],
@@ -91,5 +87,5 @@ def get_database_url(creds: Dict[str, str]) -> str:
 
 
 def get_lichess_token() -> Optional[str]:
-    """Return the bearer token used for Lichess API calls (or *None*)."""
+    """Return the bearer token for Lichess API calls (or None)."""
     return os.getenv("LICHESS_TOKEN")

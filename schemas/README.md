@@ -6,9 +6,7 @@ database tables used in the KnightShift data pipeline.
 # Schemas Directory
 
 - `init/`: Base SQL schemas auto-loaded at container startup.
-- `migrations/`: Versioned schema evolution files (manual or tool-driven).
 - `CHANGELOG.md`: History of all structural changes.
-- `schema_mappings.md`: Maps old column names to new.
 - `data_dictionary.md`: Field-by-field definitions for core tables.
 
 ## Purpose
@@ -16,7 +14,6 @@ database tables used in the KnightShift data pipeline.
 These schema files ensure:
 - Reliable, version-controlled initialization of the database
 - Easy portability across local, Docker, and cloud environments
-- Clear visibility into table structure and evolution over time
 
 ## Files
 

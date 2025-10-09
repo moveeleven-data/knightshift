@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
-"""
-backfill_user_profiles.py
-─────────────────────────
-Fetches Lichess profiles for players in `tv_channel_games` whose profile hasn't been enriched.
-"""
+# ==============================================================================
+# backfill_user_profiles.py
+# ------------------------------------------------------------------------------
+# Fetches Lichess profiles for players in `tv_channel_games` whose profiles
+# have not been enriched.
+#
+# Workflow:
+#   1. Collect unprofiled users from tv_channel_games
+#   2. Fetch profile data via the Lichess API
+#   3. Insert new profiles into lichess_users (if missing)
+#   4. Mark tv_channel_games rows as updated
+#   5. Run until SCRIPT_TIME_LIMIT or all users are processed
+# ==============================================================================
 
 from __future__ import annotations
 
@@ -32,6 +40,10 @@ from sqlalchemy import (
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
 
+# ------------------------------------------------------------------------------
+# Path & Imports
+# ------------------------------------------------------------------------------
+
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
@@ -42,8 +54,12 @@ from knightshift.utils.db_utils import (
 )
 from knightshift.utils.logging_utils import setup_logger
 
-# Environment and DB setup
+# ------------------------------------------------------------------------------
+# Environment & Database
+# ------------------------------------------------------------------------------
+
 load_dotenv(ROOT / "infra" / "compose" / ".env")
+
 LOGGER = setup_logger("backfill_user_profiles", level=logging.INFO)
 
 ENGINE = create_engine(
@@ -55,7 +71,10 @@ ENGINE = create_engine(
 SESSION: Session = sessionmaker(bind=ENGINE)()
 METADATA = MetaData()
 
-# Table models
+# ------------------------------------------------------------------------------
+# Table Models
+# ------------------------------------------------------------------------------
+
 TV_GAMES = Table(
     "tv_channel_games",
     METADATA,
@@ -97,7 +116,10 @@ LICHESS_USERS = Table(
     Column("ind_streaming", Boolean),
 )
 
+# ------------------------------------------------------------------------------
 # Config
+# ------------------------------------------------------------------------------
+
 TIME_PER_USER = 0.5
 BATCH_SIZE = 3_000
 BATCH_PAUSE = 15 * 60
@@ -105,7 +127,10 @@ PROGRESS_INTERVAL = 30
 SCRIPT_TIME_LIMIT = 5
 FORCE_REVALIDATE = True
 
-# HTTP session
+# ------------------------------------------------------------------------------
+# HTTP Session
+# ------------------------------------------------------------------------------
+
 HTTP = requests.Session()
 HTTP.headers.update(
     {
@@ -114,8 +139,13 @@ HTTP.headers.update(
     }
 )
 
+# ==============================================================================
+# Helpers
+# ==============================================================================
+
 
 def _collect_unprofiled_users() -> Set[str]:
+    """Fetch unprofiled users from tv_channel_games."""
     query = select(TV_GAMES.c.id_user_white, TV_GAMES.c.id_user_black)
     if not FORCE_REVALIDATE:
         query = query.where(TV_GAMES.c.ind_profile_updated.is_(False))
@@ -127,6 +157,7 @@ def _collect_unprofiled_users() -> Set[str]:
 
 
 def _fetch_profile(username: str) -> Optional[dict]:
+    """Fetch a single Lichess profile via API."""
     url = f"https://lichess.org/api/user/{username}"
     try:
         resp = HTTP.get(url, params={"trophies": "false"})
@@ -141,6 +172,7 @@ def _fetch_profile(username: str) -> Optional[dict]:
 
 
 def _clean_value(value: Optional[str], value_type: str) -> Optional:
+    """Normalize values (null, int, bool, or trimmed string)."""
     if value is None or str(value).strip().lower() in {"<null>", "null", "none", ""}:
         return None
     if value_type == "integer":
@@ -154,6 +186,7 @@ def _clean_value(value: Optional[str], value_type: str) -> Optional:
 
 
 def _profile_exists(user_id: str) -> bool:
+    """Check if a user profile already exists in lichess_users."""
     return (
         SESSION.execute(
             select(LICHESS_USERS.c.id_user).where(LICHESS_USERS.c.id_user == user_id)
@@ -163,9 +196,9 @@ def _profile_exists(user_id: str) -> bool:
 
 
 def _insert_profile(data: dict) -> None:
+    """Insert a new user profile into lichess_users if it doesn't exist."""
     try:
-        username = data.get("username")
-        user_id = data.get("id")
+        username, user_id = data.get("username"), data.get("id")
         LOGGER.info("Inserting profile for '%s' (id=%s).", username, user_id)
 
         profile = data.get("profile", {})
@@ -225,6 +258,7 @@ def _insert_profile(data: dict) -> None:
 
 
 def _mark_profile_done(username: str) -> None:
+    """Mark tv_channel_games rows as profile-updated for a user."""
     try:
         SESSION.execute(
             update(TV_GAMES)
@@ -241,6 +275,7 @@ def _mark_profile_done(username: str) -> None:
 
 
 def _handle_user(username: str) -> bool:
+    """Fetch, insert, and mark profile for one user."""
     data = _fetch_profile(username)
     if not data or not data.get("id"):
         return False
@@ -251,11 +286,13 @@ def _handle_user(username: str) -> bool:
 
 
 def _eta(total: int, per_item: float) -> str:
+    """Rough ETA string from total items and average time per item."""
     m, s = divmod(int(total * per_item), 60)
     return f"~{m} min {s} s" if m else f"~{s} s"
 
 
 def _process(users: Set[str]) -> None:
+    """Process all unprofiled users with progress logs and rate limiting."""
     total = len(users)
     LOGGER.info("Enriching %d users (ETA: %s)", total, _eta(total, TIME_PER_USER))
 

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-# main.py  –  “one‑shot” runner for the full KnightShift pipeline
+# ==============================================================================
+#  KnightShift - main.py
+#  Purpose: “one-shot” runner for the full KnightShift pipeline
+#           (ingestion → cleaning → enrichment)
+# ==============================================================================
 
 from __future__ import annotations
 
@@ -9,7 +13,10 @@ from pathlib import Path
 from types import FunctionType
 from typing import Final
 
-# Repo‑relative imports
+# ------------------------------------------------------------------------------
+# Paths & Imports
+# ------------------------------------------------------------------------------
+
 SRC_DIR: Final[Path] = Path(__file__).resolve().parent
 PROJECT_ROOT: Final[Path] = SRC_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -20,14 +27,16 @@ from knightshift.pipeline.run_enrichment import (
 )  # noqa: E402
 from knightshift.pipeline.run_ingestion import run_tv_ingestion  # noqa: E402
 
+# ------------------------------------------------------------------------------
+# Logging Setup
+# ------------------------------------------------------------------------------
 
-# Logging setup (shared file across stages)
 LOG_DIR: Final[Path] = PROJECT_ROOT / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 
 LOG_FILE: Final[Path] = LOG_DIR / "pipeline.log"
 
-# Pipe everything (print + traceback) to the same log file
+# Redirect stdout and stderr (prints + tracebacks) to the same log file
 sys.stdout = sys.stderr = open(
     LOG_FILE, "a", buffering=1, encoding="utf-8"
 )  # noqa: P201
@@ -37,20 +46,24 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)-8s | %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
-    force=True,  # override any previous basicConfig
+    force=True,  # override any prior configs
 )
 logger = logging.getLogger("main")
+
+# ------------------------------------------------------------------------------
+# Stage Wrapper
+# ------------------------------------------------------------------------------
 
 
 def _stage(title: str, fn: FunctionType) -> None:
     """
-    Wrapper that logs **start → finish** around a pipeline stage.
+    Run a pipeline stage with start → finish logging and full stacktrace on error.
     """
     logger.info("%s – started", title)
     try:
         fn()
         logger.info("%s – finished", title)
-    except Exception:  # pragma: no cover  (we want full stacktrace in log)
+    except Exception:  # pragma: no cover (ensures full stacktrace in logs)
         logger.exception("%s – failed", title)
         raise
 
@@ -58,4 +71,4 @@ def _stage(title: str, fn: FunctionType) -> None:
 if __name__ == "__main__":
     _stage("TV Game Ingestion", run_tv_ingestion)
     _stage("Sanitize Game Records", validate_and_clean)
-    _stage("Back‑fill User Profiles", run_enrichment)
+    _stage("Back-fill User Profiles", run_enrichment)

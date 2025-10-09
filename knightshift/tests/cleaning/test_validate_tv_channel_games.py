@@ -1,18 +1,27 @@
-#!/usr/bin/env python3
-import time
-from unittest.mock import patch, MagicMock
-import pytest
+# ==============================================================================
+# test_validate_tv_channel_games.py  –  Validation + cleaning tests
+#   Mocks DB credentials, SQLAlchemy engine, and sample rows.
+# ==============================================================================
 
-from sqlalchemy import create_engine, Table, MetaData
+#!/usr/bin/env python3
+
+import pytest
+from unittest.mock import patch, MagicMock
+from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
 
+# ------------------------------------------------------------------------------
 # Minimal setup
+# ------------------------------------------------------------------------------
 META = MetaData()
 SessionLocal = sessionmaker()
 
 
-# Mocked function for loading AWS credentials (to bypass AWS secret access)
+# ------------------------------------------------------------------------------
+# Mocks
+# ------------------------------------------------------------------------------
 def mock_load_db_credentials():
+    """Bypass AWS secret access with dummy values."""
     return {
         "username": "mockuser",
         "password": "mockpassword",
@@ -21,14 +30,13 @@ def mock_load_db_credentials():
     }
 
 
-# Mocked create_engine to simulate a connection
 def mock_create_engine(url):
-    engine = MagicMock()
-    return engine
+    """Simulate a SQLAlchemy engine with MagicMock."""
+    return MagicMock()
 
 
-# Mocked function for selecting rows (simulating database)
 def mock_select_tv_games():
+    """Return fake rows as if selected from DB."""
     return [
         {
             "id_game": 1,
@@ -51,37 +59,32 @@ def mock_select_tv_games():
     ]
 
 
-# Minimal cleanup processing logic
+# ------------------------------------------------------------------------------
+# Processing logic
+# ------------------------------------------------------------------------------
 def process_row(row):
+    """Normalize row values and simulate DB update."""
     if row["val_result"] not in {"1-0", "0-1", "1/2-1/2"}:
         print(f"Invalid result for game {row['id_game']}: {row['val_result']}")
         return False
 
-    # Normalize termination
     term = row["val_termination"].upper() if row["val_termination"] else "NORMAL"
     print(f"Normalized termination for game {row['id_game']}: {term}")
-
-    # Mock the database update
     print(f"Updating game {row['id_game']} with normalized values.")
-
     return True
 
 
-# Simple controller
 def validate_and_clean():
-    # Mocking the loading of DB credentials and the creation of an engine
+    """Simulate validation/cleaning with mocked DB + rows."""
     with (
         patch(
             "knightshift.utils.db_utils.load_db_credentials", mock_load_db_credentials
         ),
         patch("sqlalchemy.create_engine", mock_create_engine),
     ):
-        # Fetch mock data (as if selecting from DB)
         rows = mock_select_tv_games()
-        updated = 0
-        deleted = 0
+        updated, deleted = 0, 0
 
-        # Process each row
         for row in rows:
             processed = process_row(row)
             if processed:
@@ -89,24 +92,22 @@ def validate_and_clean():
             else:
                 deleted += 1
 
-        # Simulating commit
         print(f"Done. Updated={updated}  Deleted={deleted}")
 
 
-# Test function for pytest
+# ------------------------------------------------------------------------------
+# Tests
+# ------------------------------------------------------------------------------
 @pytest.mark.parametrize(
     "test_input",
     [
-        ({"val_result": "1-0", "val_termination": "NORMAL", "id_game": 1}),
-        ({"val_result": "0-1", "val_termination": "RESIGNED", "id_game": 2}),
+        {"val_result": "1-0", "val_termination": "NORMAL", "id_game": 1},
+        {"val_result": "0-1", "val_termination": "RESIGNED", "id_game": 2},
     ],
 )
 def test_validate_and_clean(test_input):
-    # Call your function in the test
     validate_and_clean()
 
-    # Assertions can be added here based on the expected results
-    # Example assertion (you can add more depending on how you want to test)
     assert test_input["val_result"] in {"1-0", "0-1", "1/2-1/2"}
     assert test_input["val_termination"].upper() == test_input["val_termination"]
 
