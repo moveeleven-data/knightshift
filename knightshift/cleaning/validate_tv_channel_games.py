@@ -10,17 +10,14 @@
 #   • Mark rows validated or delete invalid ones
 # ==============================================================================
 
-from __future__ import annotations
-
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import List, Tuple
 
 from dotenv import load_dotenv
 from sqlalchemy import MetaData, Table, create_engine, delete, select, update
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 # ------------------------------------------------------------------------------
 # Path & Imports
@@ -41,7 +38,7 @@ LOGGER = setup_logger("validate_tv_channel_games")
 
 ENGINE = create_engine(get_database_url(load_db_credentials()))
 META = MetaData()
-TV_GAMES: Table = Table("tv_channel_games", META, autoload_with=ENGINE)
+TV_GAMES = Table("tv_channel_games", META, autoload_with=ENGINE)
 SessionLocal = sessionmaker(bind=ENGINE)
 
 # ------------------------------------------------------------------------------
@@ -58,22 +55,19 @@ FORCE_REVALIDATE = True
 # Validators & Helpers
 # ------------------------------------------------------------------------------
 
-
-def _to_int(v) -> int | None:
+def _to_int(v):
     try:
         return int(v) if v is not None else None
     except (TypeError, ValueError):
         return None
 
 
-def _validate_required(row) -> Tuple[bool, str]:
-    """Ensure all required fields are present."""
+def _validate_required(row):
     missing = next((f for f in REQUIRED_FIELDS if not getattr(row, f, None)), None)
     return (False, f"Missing field: {missing}") if missing else (True, "")
 
 
-def _validate_result(row) -> Tuple[bool, str]:
-    """Ensure game result is one of the valid values."""
+def _validate_result(row):
     return (
         (False, f"Invalid result: {row.val_result}")
         if row.val_result not in VALID_RESULTS
@@ -81,8 +75,7 @@ def _validate_result(row) -> Tuple[bool, str]:
     )
 
 
-def _clean_title(raw: str | None) -> str:
-    """Normalise player title string (None/unranked → 'None')."""
+def _clean_title(raw):
     return (
         "None"
         if not raw or raw.strip().lower() in {"none", "unranked"}
@@ -90,8 +83,7 @@ def _clean_title(raw: str | None) -> str:
     )
 
 
-def _needs_tv_fix(row) -> bool:
-    """Decide if a row requires validation or correction."""
+def _needs_tv_fix(row):
     return (
         True
         if FORCE_REVALIDATE
@@ -107,17 +99,8 @@ def _needs_tv_fix(row) -> bool:
 # Row Processor
 # ------------------------------------------------------------------------------
 
-
-def _process_row(session: Session, row) -> Tuple[bool, bool]:
-    """
-    Validate and normalise a single row.
-
-    Returns
-    -------
-    Tuple[bool, bool]
-        (processed, was_deleted)
-    """
-    notes: List[str] = []
+def _process_row(session, row):
+    notes = []
 
     title_white = _clean_title(row.val_title_white)
     title_black = _clean_title(row.val_title_black)
@@ -157,7 +140,6 @@ def _process_row(session: Session, row) -> Tuple[bool, bool]:
     if term_key != term:
         notes.append(f"Normalized termination: {row.val_termination} → {term}")
 
-    # Apply updates
     session.execute(
         update(TV_GAMES)
         .where(TV_GAMES.c.id_game == row.id_game)
@@ -181,9 +163,7 @@ def _process_row(session: Session, row) -> Tuple[bool, bool]:
 # Controller
 # ------------------------------------------------------------------------------
 
-
-def validate_and_clean() -> None:
-    """Validate and clean all rows in tv_channel_games."""
+def validate_and_clean():
     with SessionLocal() as session:
         raw_rows = session.execute(select(TV_GAMES)).fetchall()
         rows = [r for r in raw_rows if _needs_tv_fix(r)]
