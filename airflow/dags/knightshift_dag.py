@@ -1,17 +1,15 @@
-from __future__ import annotations
-
 import os
 import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Final
 
 import psycopg2
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from dotenv import load_dotenv
 
-ENV_FILE: Final[Path] = Path("/app/config/.env.local")
+# Load environment variables
+ENV_FILE = Path("/app/config/.env.local")
 load_dotenv(ENV_FILE, override=True)
 
 
@@ -19,7 +17,7 @@ load_dotenv(ENV_FILE, override=True)
 # Database Health Check
 # =============================================================================
 
-def check_database_health() -> None:
+def check_database_health():
     """
     Ensure PostgreSQL is reachable and `tv_channel_games` has records.
     Raises ValueError if unavailable or empty.
@@ -54,7 +52,7 @@ def check_database_health() -> None:
 # Helpers
 # =============================================================================
 
-def _run_script(script_path: str) -> None:
+def _run_script(script_path):
     """
     Run a Python script as a subprocess.
     Fails if the process returns non-zero.
@@ -62,7 +60,7 @@ def _run_script(script_path: str) -> None:
     subprocess.run(["python", script_path], check=True)
 
 
-def _make_task(task_id: str, script_rel_path: str) -> PythonOperator:
+def _make_task(task_id, script_rel_path):
     """
     Create a PythonOperator that executes a pipeline script
     located in /app/knightshift/pipeline/.
@@ -79,7 +77,7 @@ def _make_task(task_id: str, script_rel_path: str) -> PythonOperator:
 # DAG Definition
 # =============================================================================
 
-DEFAULT_ARGS: Final[dict] = {
+DEFAULT_ARGS = {
     "owner": "airflow",
     "retries": 1,
     "retry_delay": timedelta(minutes=2),
