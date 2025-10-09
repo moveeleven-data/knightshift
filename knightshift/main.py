@@ -1,45 +1,37 @@
 #!/usr/bin/env python3
 # ==============================================================================
 #  KnightShift - main.py
-#  Purpose: “one-shot” runner for the full KnightShift pipeline
+#  Purpose: one-shot runner for the full KnightShift pipeline
 #           (ingestion → cleaning → enrichment)
 # ==============================================================================
-
-from __future__ import annotations
 
 import logging
 import sys
 from pathlib import Path
-from types import FunctionType
-from typing import Final
 
 # ------------------------------------------------------------------------------
 # Paths & Imports
 # ------------------------------------------------------------------------------
 
-SRC_DIR: Final[Path] = Path(__file__).resolve().parent
-PROJECT_ROOT: Final[Path] = SRC_DIR.parent
+SRC_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SRC_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from knightshift.pipeline.run_cleaning import validate_and_clean  # noqa: E402
-from knightshift.pipeline.run_enrichment import (
-    run_enrichment_pipeline as run_enrichment,
-)  # noqa: E402
+from knightshift.pipeline.run_enrichment import run_enrichment_pipeline as run_enrichment  # noqa: E402
 from knightshift.pipeline.run_ingestion import run_tv_ingestion  # noqa: E402
 
 # ------------------------------------------------------------------------------
 # Logging Setup
 # ------------------------------------------------------------------------------
 
-LOG_DIR: Final[Path] = PROJECT_ROOT / "logs"
+LOG_DIR = PROJECT_ROOT / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 
-LOG_FILE: Final[Path] = LOG_DIR / "pipeline.log"
+LOG_FILE = LOG_DIR / "pipeline.log"
 
 # Redirect stdout and stderr (prints + tracebacks) to the same log file
-sys.stdout = sys.stderr = open(
-    LOG_FILE, "a", buffering=1, encoding="utf-8"
-)  # noqa: P201
+sys.stdout = sys.stderr = open(LOG_FILE, "a", buffering=1, encoding="utf-8")  # noqa: P201
 
 logging.basicConfig(
     filename=LOG_FILE,
@@ -54,8 +46,7 @@ logger = logging.getLogger("main")
 # Stage Wrapper
 # ------------------------------------------------------------------------------
 
-
-def _stage(title: str, fn: FunctionType) -> None:
+def _stage(title, fn):
     """
     Run a pipeline stage with start → finish logging and full stacktrace on error.
     """
@@ -63,7 +54,7 @@ def _stage(title: str, fn: FunctionType) -> None:
     try:
         fn()
         logger.info("%s – finished", title)
-    except Exception:  # pragma: no cover (ensures full stacktrace in logs)
+    except Exception:  # pragma: no cover
         logger.exception("%s – failed", title)
         raise
 
