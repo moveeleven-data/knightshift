@@ -4,22 +4,11 @@
 # ------------------------------------------------------------------------------
 # Fetches Lichess profiles for players in `tv_channel_games` whose profiles
 # have not been enriched.
-#
-# Workflow:
-#   1. Collect unprofiled users from tv_channel_games
-#   2. Fetch profile data via the Lichess API
-#   3. Insert new profiles into lichess_users (if missing)
-#   4. Mark tv_channel_games rows as updated
-#   5. Run until SCRIPT_TIME_LIMIT or all users are processed
 # ==============================================================================
 
-from __future__ import annotations
-
-import logging
 import sys
 import time
 from pathlib import Path
-from typing import Optional, Set
 
 import requests
 from dotenv import load_dotenv
@@ -37,7 +26,7 @@ from sqlalchemy import (
     select,
     update,
 )
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 
 # ------------------------------------------------------------------------------
@@ -60,7 +49,7 @@ from knightshift.utils.logging_utils import setup_logger
 
 load_dotenv(ROOT / "infra" / "compose" / ".env")
 
-LOGGER = setup_logger("backfill_user_profiles", level=logging.INFO)
+LOGGER = setup_logger("backfill_user_profiles")
 
 ENGINE = create_engine(
     get_database_url(load_db_credentials()),
@@ -68,11 +57,11 @@ ENGINE = create_engine(
     pool_size=10,
     max_overflow=20,
 )
-SESSION: Session = sessionmaker(bind=ENGINE)()
+SESSION = sessionmaker(bind=ENGINE)()
 METADATA = MetaData()
 
 # ------------------------------------------------------------------------------
-# Table Models
+# Tables
 # ------------------------------------------------------------------------------
 
 TV_GAMES = Table(
@@ -128,7 +117,7 @@ SCRIPT_TIME_LIMIT = 5
 FORCE_REVALIDATE = True
 
 # ------------------------------------------------------------------------------
-# HTTP Session
+# HTTP
 # ------------------------------------------------------------------------------
 
 HTTP = requests.Session()
@@ -143,36 +132,28 @@ HTTP.headers.update(
 # Helpers
 # ==============================================================================
 
-
-def _collect_unprofiled_users() -> Set[str]:
-    """Fetch unprofiled users from tv_channel_games."""
+def _collect_unprofiled_users():
     query = select(TV_GAMES.c.id_user_white, TV_GAMES.c.id_user_black)
     if not FORCE_REVALIDATE:
         query = query.where(TV_GAMES.c.ind_profile_updated.is_(False))
 
     rows = SESSION.execute(query).fetchall()
-    users = {user for row in rows for user in row if user}
-    LOGGER.info("Found %d unprofiled users.", len(users))
-    return users
+    return {user for row in rows for user in row if user}
 
 
-def _fetch_profile(username: str) -> Optional[dict]:
-    """Fetch a single Lichess profile via API."""
+def _fetch_profile(username):
     url = f"https://lichess.org/api/user/{username}"
     try:
         resp = HTTP.get(url, params={"trophies": "false"})
         resp.raise_for_status()
-        LOGGER.info("Fetched profile for '%s'", username)
         return resp.json()
-    except HTTPError as e:
-        LOGGER.warning("HTTP %s for user '%s': %s", resp.status_code, username, e)
-    except Exception as e:
-        LOGGER.warning("Error fetching '%s': %s", username, e)
-    return None
+    except HTTPError:
+        return None
+    except Exception:
+        return None
 
 
-def _clean_value(value: Optional[str], value_type: str) -> Optional:
-    """Normalize values (null, int, bool, or trimmed string)."""
+def _clean_value(value, value_type):
     if value is None or str(value).strip().lower() in {"<null>", "null", "none", ""}:
         return None
     if value_type == "integer":
@@ -185,8 +166,7 @@ def _clean_value(value: Optional[str], value_type: str) -> Optional:
     return value.strip() if isinstance(value, str) else value
 
 
-def _profile_exists(user_id: str) -> bool:
-    """Check if a user profile already exists in lichess_users."""
+def _profile_exists(user_id):
     return (
         SESSION.execute(
             select(LICHESS_USERS.c.id_user).where(LICHESS_USERS.c.id_user == user_id)
@@ -195,12 +175,9 @@ def _profile_exists(user_id: str) -> bool:
     )
 
 
-def _insert_profile(data: dict) -> None:
-    """Insert a new user profile into lichess_users if it doesn't exist."""
+def _insert_profile(data):
     try:
-        username, user_id = data.get("username"), data.get("id")
-        LOGGER.info("Inserting profile for '%s' (id=%s).", username, user_id)
-
+        user_id = data.get("id")
         profile = data.get("profile", {})
         perfs = data.get("perfs", {})
         play_time = data.get("playTime", {})
@@ -208,7 +185,7 @@ def _insert_profile(data: dict) -> None:
 
         row = {
             "id_user": user_id,
-            "val_username": username,
+            "val_username": data.get("username"),
             "val_title": _clean_value(profile.get("title"), "string"),
             "val_url": _clean_value(profile.get("url"), "string"),
             "val_real_name": _clean_value(profile.get("realName"), "string"),
@@ -216,24 +193,12 @@ def _insert_profile(data: dict) -> None:
             "val_bio": _clean_value(profile.get("bio"), "string"),
             "val_rating_fide": _clean_value(profile.get("fideRating"), "integer"),
             "val_rating_uscf": _clean_value(profile.get("uscfRating"), "integer"),
-            "val_rating_bullet": _clean_value(
-                perfs.get("bullet", {}).get("rating"), "integer"
-            ),
-            "val_rating_blitz": _clean_value(
-                perfs.get("blitz", {}).get("rating"), "integer"
-            ),
-            "val_rating_classical": _clean_value(
-                perfs.get("classical", {}).get("rating"), "integer"
-            ),
-            "val_rating_rapid": _clean_value(
-                perfs.get("rapid", {}).get("rating"), "integer"
-            ),
-            "val_rating_chess960": _clean_value(
-                perfs.get("chess960", {}).get("rating"), "integer"
-            ),
-            "val_rating_ultra_bullet": _clean_value(
-                perfs.get("ultraBullet", {}).get("rating"), "integer"
-            ),
+            "val_rating_bullet": _clean_value(perfs.get("bullet", {}).get("rating"), "integer"),
+            "val_rating_blitz": _clean_value(perfs.get("blitz", {}).get("rating"), "integer"),
+            "val_rating_classical": _clean_value(perfs.get("classical", {}).get("rating"), "integer"),
+            "val_rating_rapid": _clean_value(perfs.get("rapid", {}).get("rating"), "integer"),
+            "val_rating_chess960": _clean_value(perfs.get("chess960", {}).get("rating"), "integer"),
+            "val_rating_ultra_bullet": _clean_value(perfs.get("ultraBullet", {}).get("rating"), "integer"),
             "val_country_code": _clean_value(profile.get("flag"), "string"),
             "tm_created": data.get("createdAt"),
             "tm_seen": data.get("seenAt"),
@@ -251,14 +216,11 @@ def _insert_profile(data: dict) -> None:
         if not _profile_exists(user_id):
             SESSION.execute(LICHESS_USERS.insert().values(**row))
             SESSION.commit()
-            LOGGER.info("Inserted profile for '%s'.", username)
-    except Exception as e:
-        LOGGER.error("Insert error for '%s': %s", data.get("username"), e)
+    except Exception:
         SESSION.rollback()
 
 
-def _mark_profile_done(username: str) -> None:
-    """Mark tv_channel_games rows as profile-updated for a user."""
+def _mark_profile_done(username):
     try:
         SESSION.execute(
             update(TV_GAMES)
@@ -269,13 +231,11 @@ def _mark_profile_done(username: str) -> None:
             .values(ind_profile_updated=True)
         )
         SESSION.commit()
-    except Exception as e:
-        LOGGER.error("Failed to mark '%s' as updated: %s", username, e)
+    except Exception:
         SESSION.rollback()
 
 
-def _handle_user(username: str) -> bool:
-    """Fetch, insert, and mark profile for one user."""
+def _handle_user(username):
     data = _fetch_profile(username)
     if not data or not data.get("id"):
         return False
@@ -285,54 +245,29 @@ def _handle_user(username: str) -> bool:
     return True
 
 
-def _eta(total: int, per_item: float) -> str:
-    """Rough ETA string from total items and average time per item."""
-    m, s = divmod(int(total * per_item), 60)
-    return f"~{m} min {s} s" if m else f"~{s} s"
-
-
-def _process(users: Set[str]) -> None:
-    """Process all unprofiled users with progress logs and rate limiting."""
+def _process(users):
     total = len(users)
-    LOGGER.info("Enriching %d users (ETA: %s)", total, _eta(total, TIME_PER_USER))
-
-    start = last_log = time.time()
+    start = time.time()
     processed = 0
 
     for username in users:
         if time.time() - start > SCRIPT_TIME_LIMIT:
-            LOGGER.warning("Time limit reached – stopping.")
             break
-
         try:
             if _handle_user(username):
                 processed += 1
-        except Exception as e:
-            LOGGER.error("Unhandled error for user '%s': %s", username, e)
-
-        if time.time() - last_log > PROGRESS_INTERVAL:
-            LOGGER.info("Progress %d/%d", processed, total)
-            last_log = time.time()
-
+        except Exception:
+            pass
         time.sleep(TIME_PER_USER)
-
         if processed and processed % BATCH_SIZE == 0:
-            LOGGER.info(
-                "Processed %d users – pausing %d min.", processed, BATCH_PAUSE // 60
-            )
             time.sleep(BATCH_PAUSE)
 
-    LOGGER.info("Done. %d profiles processed.", processed)
 
-
-def run_backfill_user_profiles() -> None:
-    LOGGER.info("Starting backfill.")
+def run_backfill_user_profiles():
     users = _collect_unprofiled_users()
     if not users:
-        LOGGER.info("All profiles up-to-date.")
         return
     _process(users)
-    LOGGER.info("Backfill complete.")
 
 
 if __name__ == "__main__":
