@@ -1,24 +1,34 @@
 #!/usr/bin/env python3
-"""
-backfill_opening_names.py
-──────────────────────────
-Fetches opening names and ECO codes from Lichess for games missing this data.
-"""
+# ==============================================================================
+# backfill_opening_names.py
+# ------------------------------------------------------------------------------
+# Fetches opening names and ECO codes from Lichess for games missing this data.
+#
+# Workflow:
+#   1. Collect games missing opening/eco/elo fields
+#   2. Call Lichess API /game/export/{id} with opening=true
+#   3. Parse ECO code, opening name, Elo ratings
+#   4. Upsert updates into tv_channel_games
+# ==============================================================================
 
-import logging
+from __future__ import annotations
+
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Set, Tuple
-from datetime import datetime
 
 import requests
 from dotenv import load_dotenv
-from sqlalchemy import MetaData, String, Column, create_engine, select, Table
+from requests.exceptions import HTTPError
+from sqlalchemy import Column, MetaData, String, Table, create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
-from requests.exceptions import HTTPError
 
+# ------------------------------------------------------------------------------
+# Path & Imports
+# ------------------------------------------------------------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -26,18 +36,26 @@ from knightshift.utils.db_utils import load_db_credentials, get_database_url
 from knightshift.utils.logging_utils import setup_logger
 from knightshift.db.game_upsert import upsert_game
 
-# Load environment and initialize logger
-load_dotenv(PROJECT_ROOT / "infra" / "compose" / ".env")
-LOGGER = setup_logger("backfill_opening_names", level=logging.DEBUG)
+# ------------------------------------------------------------------------------
+# Environment & Logger
+# ------------------------------------------------------------------------------
 
-# DB setup
-db_credentials = load_db_credentials()
-DATABASE_URL = get_database_url(db_credentials)
-ENGINE = create_engine(DATABASE_URL, poolclass=QueuePool, pool_size=10, max_overflow=20)
+load_dotenv(PROJECT_ROOT / "infra" / "compose" / ".env")
+LOGGER = setup_logger("backfill_opening_names")
+
+# ------------------------------------------------------------------------------
+# Database Setup
+# ------------------------------------------------------------------------------
+
+ENGINE = create_engine(
+    get_database_url(load_db_credentials()),
+    poolclass=QueuePool,
+    pool_size=10,
+    max_overflow=20,
+)
 SESSION = sessionmaker(bind=ENGINE)
 METADATA = MetaData()
 
-# Minimal table model
 GAMES_TABLE = Table(
     "tv_channel_games",
     METADATA,
@@ -49,19 +67,30 @@ GAMES_TABLE = Table(
     Column("tm_validated", String, nullable=True),
 )
 
+# ------------------------------------------------------------------------------
 # Config
-TIME_PER_GAME = 0.5
-BATCH_SIZE = 3_000
-BATCH_PAUSE = 15 * 60
-PROGRESS_INTERVAL = 30
-SCRIPT_TIME_LIMIT = 30
+# ------------------------------------------------------------------------------
 
-# Shared HTTP session
+TIME_PER_GAME = 0.5  # seconds per game
+BATCH_SIZE = 3_000
+BATCH_PAUSE = 15 * 60  # seconds
+PROGRESS_INTERVAL = 30  # seconds
+SCRIPT_TIME_LIMIT = 30  # seconds
+
+# ------------------------------------------------------------------------------
+# HTTP Session
+# ------------------------------------------------------------------------------
+
 HTTP = requests.Session()
 HTTP.headers.update({"Content-Type": "application/x-www-form-urlencoded"})
 
+# ==============================================================================
+# Helpers
+# ==============================================================================
+
 
 def _collect_unprofiled_games() -> Set[str]:
+    """Return set of game IDs missing opening/eco/elo information."""
     query = select(GAMES_TABLE.c.id_game).where(
         (GAMES_TABLE.c.val_opening_name.is_(None))
         | (GAMES_TABLE.c.val_opening_name == "?")
@@ -70,7 +99,7 @@ def _collect_unprofiled_games() -> Set[str]:
         | (GAMES_TABLE.c.val_elo_white.is_(None))
         | (GAMES_TABLE.c.val_elo_black.is_(None))
     )
-    LOGGER.debug("Query to fetch unprofiled games: %s", query)
+    LOGGER.debug("Unprofiled games query: %s", query)
 
     try:
         with SESSION() as session:
@@ -81,23 +110,24 @@ def _collect_unprofiled_games() -> Set[str]:
             else:
                 LOGGER.info("No games need updating.")
             return game_ids
-    except Exception as e:
-        LOGGER.error("Error during database query: %s", e)
+    except Exception as exc:
+        LOGGER.error("Error fetching unprofiled games: %s", exc)
         return set()
 
 
 def _fetch_opening_info(game_id: str) -> Tuple[str, str, str, str]:
+    """Fetch ECO code, opening name, and Elo ratings for one game via Lichess API."""
     url = f"https://lichess.org/game/export/{game_id}"
     params = {"moves": "true", "opening": "true"}
-    LOGGER.debug("Fetching opening info for game %s...", game_id)
+    LOGGER.debug("Fetching opening info for game %s", game_id)
 
     try:
-        response = HTTP.get(url, params=params)
-        response.raise_for_status()
-        LOGGER.debug("Response for game %s: %s", game_id, response.text)
+        resp = HTTP.get(url, params=params)
+        resp.raise_for_status()
+        LOGGER.debug("Response for game %s: %s", game_id, resp.text)
 
         eco_code = opening_name = elo_white = elo_black = None
-        for line in response.text.splitlines():
+        for line in resp.text.splitlines():
             if line.startswith("[ECO "):
                 eco_code = line.split('"')[1]
             elif line.startswith("[Opening "):
@@ -107,27 +137,19 @@ def _fetch_opening_info(game_id: str) -> Tuple[str, str, str, str]:
             elif line.startswith("[BlackElo "):
                 elo_black = line.split('"')[1]
 
-        LOGGER.debug(
-            "Extracted for game %s: eco_code=%s, opening_name=%s, elo_white=%s, elo_black=%s",
-            game_id,
-            eco_code,
-            opening_name,
-            elo_white,
-            elo_black,
-        )
-
         return eco_code, opening_name, elo_white, elo_black
 
-    except HTTPError as e:
-        LOGGER.warning("HTTP error for game %s: %s", game_id, e)
-    except Exception as e:
-        LOGGER.warning("Fetch error for game %s: %s", game_id, e)
+    except HTTPError as exc:
+        LOGGER.warning("HTTP error for game %s: %s", game_id, exc)
+    except Exception as exc:
+        LOGGER.warning("Fetch error for game %s: %s", game_id, exc)
     return None, None, None, None
 
 
 def _update_opening_info(
     game_id: str, eco_code: str, opening_name: str, elo_white: str, elo_black: str
 ) -> None:
+    """Upsert ECO/opening/elo info for a game."""
     game_data = {
         "id_game": game_id,
         "val_opening_name": opening_name,
@@ -142,28 +164,27 @@ def _update_opening_info(
             if eco_code and opening_name:
                 updated = upsert_game(session, GAMES_TABLE, game_data)
                 if updated:
-                    LOGGER.info("Updated game %s.", game_id)
+                    LOGGER.info("Updated game %s", game_id)
                 else:
-                    LOGGER.warning("Failed to update game %s.", game_id)
+                    LOGGER.warning("No changes applied for game %s", game_id)
             else:
-                LOGGER.warning("No opening info for game %s.", game_id)
+                LOGGER.warning("Missing opening info for game %s", game_id)
             session.commit()
-    except Exception as e:
-        LOGGER.error("Update error for game %s: %s", game_id, e)
+    except Exception as exc:
+        LOGGER.error("Update error for game %s: %s", game_id, exc)
 
 
 def _process(game_ids: Set[str]) -> None:
+    """Process all unprofiled games with rate limiting and progress logs."""
     total = len(game_ids)
-    LOGGER.info(
-        "Need to update %d games (ETA %.1f seconds).", total, total * TIME_PER_GAME
-    )
+    LOGGER.info("Updating %d games (ETA %.1f s)", total, total * TIME_PER_GAME)
 
-    start_time = last_log = time.time()
+    start, last_log = time.time(), time.time()
     processed = 0
 
     for game_id in game_ids:
-        if time.time() - start_time > SCRIPT_TIME_LIMIT:
-            LOGGER.warning("Time-limit reached – stopping early.")
+        if time.time() - start > SCRIPT_TIME_LIMIT:
+            LOGGER.warning("Script time limit reached – stopping early.")
             break
 
         eco_code, opening_name, elo_white, elo_black = _fetch_opening_info(game_id)
@@ -178,21 +199,21 @@ def _process(game_ids: Set[str]) -> None:
             last_log = time.time()
 
         time.sleep(TIME_PER_GAME)
-        if processed % BATCH_SIZE == 0 and processed > 0:
+
+        if processed and processed % BATCH_SIZE == 0:
             LOGGER.info(
-                "Processed %d games – cooling off for %d min.",
-                processed,
-                BATCH_PAUSE // 60,
+                "Processed %d games – pausing %d min", processed, BATCH_PAUSE // 60
             )
             time.sleep(BATCH_PAUSE)
 
-    LOGGER.info("Finished processing %d games.", processed)
+    LOGGER.info("Finished processing %d games", processed)
 
 
 def run_backfill_opening_names() -> None:
+    """Main runner for backfilling opening names."""
     game_ids = _collect_unprofiled_games()
     if not game_ids:
-        LOGGER.info("All opening info is up-to-date – nothing to do.")
+        LOGGER.info("All opening info is up-to-date.")
         return
     _process(game_ids)
 

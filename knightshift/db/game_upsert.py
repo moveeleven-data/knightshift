@@ -1,11 +1,11 @@
-# src/db/game_upsert.py
-"""
-Idempotent “upsert” helper for tv_channel_games
-───────────────────────────────────────────────
-* Normalises raw PGN metadata → dictionary ready for SQLAlchemy
-* INSERTs a new row if `id` not present, otherwise UPDATEs it
-* Returns **True** when an *existing* row was updated, **False** on insert / failure
-"""
+# ==============================================================================
+# game_upsert.py  –  Idempotent upsert helper for tv_channel_games
+# ------------------------------------------------------------------------------
+# Responsibilities:
+#   • Normalise raw PGN metadata → dictionary ready for SQLAlchemy
+#   • Insert a new row if id not present, otherwise update it
+#   • Return True on update, False on insert or failure
+# ==============================================================================
 
 from __future__ import annotations
 
@@ -19,32 +19,24 @@ from knightshift.utils.logging_utils import setup_logger
 
 LOGGER = setup_logger("game_upsert")
 
-# ═══════════════════════════════════════════════
+# ------------------------------------------------------------------------------
 # Parsing helpers
-# ═══════════════════════════════════════════════
+# ------------------------------------------------------------------------------
 
 
 def _parse_int(value: Any) -> Optional[int]:
     """
-    Safely parse a value into an integer, or return None if the input is missing or invalid.
+    Safely cast a value to int, or return None if invalid.
 
-    Used to normalize raw PGN fields (like Elo ratings) that may be:
-    - Proper integers (e.g., 1500)
-    - Numeric strings (e.g., "2400")
-    - Empty strings, nulls, or bad data (e.g., "", "?", None)
-
-    Returns:
-        An integer if valid, otherwise None (for DB-safe null insert).
+    Handles:
+      • Integers (1500)
+      • Numeric strings ("2400")
+      • Empty strings, nulls, "?" → None
     """
-    # Explicitly handle missing/null values (e.g., None from dict.get)
     if value is None:
         return None
-
-    # Handle empty or whitespace-only strings (e.g., "")
-    if isinstance(value, str) and value.strip() == "":
+    if isinstance(value, str) and not value.strip():
         return None
-
-    # Attempt safe integer conversion; fail silently on invalid inputs like "?" or float strings
     try:
         return int(value)
     except (ValueError, TypeError):
@@ -52,7 +44,7 @@ def _parse_int(value: Any) -> Optional[int]:
 
 
 def _parse_date(value: str | None, fmt: str = "%Y.%m.%d") -> Optional[date]:
-    """Cast a *YYYY.MM.DD* string to `date`, else *None*."""
+    """Parse a YYYY.MM.DD string to date, else None."""
     if not value:
         return None
     try:
@@ -63,7 +55,7 @@ def _parse_date(value: str | None, fmt: str = "%Y.%m.%d") -> Optional[date]:
 
 
 def _parse_time(value: str | None, fmt: str = "%H:%M:%S") -> Optional[time]:
-    """Cast an *HH:MM:SS* string to `time`, else *None*."""
+    """Parse an HH:MM:SS string to time, else None."""
     if not value:
         return None
     try:
@@ -73,13 +65,13 @@ def _parse_time(value: str | None, fmt: str = "%H:%M:%S") -> Optional[time]:
         return None
 
 
-# ═══════════════════════════════════════════════
+# ------------------------------------------------------------------------------
 # Public helpers
-# ═══════════════════════════════════════════════
+# ------------------------------------------------------------------------------
 
 
 def build_game_data(raw: Dict[str, Any]) -> Dict[str, Any]:
-    """Normalise the raw PGN dict into DB‑ready column → value mapping."""
+    """Normalise raw PGN dict into DB-ready column → value mapping."""
     return {
         "id_game": raw.get("site", "").split("/")[-1],
         "val_event_name": raw.get("event", ""),
@@ -108,7 +100,11 @@ def upsert_game(session: Session, table: Table, game: Dict[str, Any]) -> bool:
     """
     Insert or update a single game row.
 
-    Returns **True** if an existing row was updated, **False** on insert or error.
+    Returns
+    -------
+    bool
+        True if an existing row was updated,
+        False on insert or error.
     """
     game_id = game.get("id_game")
     if not game_id:
