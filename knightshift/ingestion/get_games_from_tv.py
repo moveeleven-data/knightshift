@@ -39,7 +39,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Session, sessionmaker
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))  # idempotent
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from knightshift.db.game_upsert import build_game_data, upsert_game
 from knightshift.utils.db_utils import (
@@ -157,9 +157,9 @@ def _stream_channel(channel: str, added: List[str], updated: List[str]) -> None:
     url = f"https://lichess.org/api/tv/{channel}"
     params = {"clocks": False, "opening": True}
 
-    for attempt in range(1, 4):  # max 3 retries
+    for attempt in range(1, 4):
         resp = HTTP.get(url, params=params, stream=True)
-        if resp.status_code == 429:  # too many requests
+        if resp.status_code == 429:
             LOGGER.error("Rate limit (429) on '%s' – exiting", channel)
             sys.exit(1)
         if resp.ok:
@@ -204,7 +204,7 @@ def _process_game_block(
 ) -> None:
     """Parse a single PGN block and upsert it into Postgres."""
     game = parse_pgn_lines(pgn_lines)
-    if "site" not in game:  # sanity guard
+    if "site" not in game:
         return
 
     db_row = build_game_data(game)
