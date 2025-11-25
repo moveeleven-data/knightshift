@@ -17,9 +17,9 @@ SRC_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SRC_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from knightshift.pipeline.run_cleaning import validate_and_clean  # noqa: E402
-from knightshift.pipeline.run_enrichment import run_enrichment_pipeline as run_enrichment  # noqa: E402
-from knightshift.pipeline.run_ingestion import run_tv_ingestion  # noqa: E402
+from knightshift.pipeline.run_cleaning import validate_and_clean
+from knightshift.pipeline.run_enrichment import run_enrichment_pipeline as run_enrichment
+from knightshift.pipeline.run_ingestion import run_tv_ingestion
 
 # ------------------------------------------------------------------------------
 # Logging Setup
@@ -31,14 +31,14 @@ LOG_DIR.mkdir(exist_ok=True)
 LOG_FILE = LOG_DIR / "pipeline.log"
 
 # Redirect stdout and stderr (prints + tracebacks) to the same log file
-sys.stdout = sys.stderr = open(LOG_FILE, "a", buffering=1, encoding="utf-8")  # noqa: P201
+sys.stdout = sys.stderr = open(LOG_FILE, "a", buffering=1, encoding="utf-8")
 
 logging.basicConfig(
     filename=LOG_FILE,
     level=logging.INFO,
     format="%(asctime)s | %(levelname)-8s | %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
-    force=True,  # override any prior configs
+    force=True,
 )
 logger = logging.getLogger("main")
 
