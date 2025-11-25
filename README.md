@@ -1,7 +1,7 @@
 <h1 align="center">Knightshift: Chess Analytics Pipeline</h1>
 
 <p align="center">
-  Turn live Lichess games into structured, analytics-ready records — orchestrated with Airflow.
+  Turn live Lichess games into structured, analytics-ready records, orchestrated with Airflow.
 </p>
 
 
@@ -33,7 +33,7 @@
 | PGN parsing & schema | Move-by-move chess data structured into relational form |
 | Upserts & deduplication | SQLAlchemy logic ensures clean, reproducible tables |
 | Secrets management | Credentials from AWS Secrets Manager or `.env` |
-| Airflow orchestration | Optional DAGs schedule ingestion and monitoring |
+| Airflow orchestration | DAGs schedule ingestion and monitoring |
 
 
 
@@ -74,14 +74,9 @@ knightshift/
 │   ├── dags/                   # Airflow DAGs
 │   ├── logs/                   # Task and execution logs
 │   ├── plugins/                # Airflow custom plugins
-├── annotations/                # Annotations and exploration docs
-├── backups/                    # Backup logs and files
-├── config/                     # Configuration files
 ├── docs/                       # Documentation (e.g., changelogs, architecture)
-├── explorations/               # Exploration of data models (e.g., NoSQL, Graph)
 ├── infra/                      # Infrastructure configuration (Docker, Compose)
 ├── knightshift/                # Core pipeline scripts (ingestion, cleaning, enrichment)
-├── logs/                       # Pipeline logs
 ├── schemas/                    # Database schemas and migrations
 └── scripts/                    # Utility scripts (e.g., run scripts)
 ```
